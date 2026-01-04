@@ -1,0 +1,353 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>解决 git push 出现 port 22: Connection timed out | sharpmind.tech</title><meta name="author" content="Joy"><meta name="copyright" content="Joy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="当使用 git push 或 git clone 出现 &quot;ssh: connect to host github.com port 22: Connection timed out&quot; 报错时的原因分析与解决方案，并科普端口 22 和 443 的区别。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="解决 git push 出现 port 22: Connection timed out">
+<meta property="og:url" content="https://sharpmind.tech/git-push-github-com-port-22-Connection-timed-out-fatal/index.html">
+<meta property="og:site_name" content="sharpmind.tech">
+<meta property="og:description" content="当使用 git push 或 git clone 出现 &quot;ssh: connect to host github.com port 22: Connection timed out&quot; 报错时的原因分析与解决方案，并科普端口 22 和 443 的区别。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg">
+<meta property="article:published_time" content="2025-09-08T10:45:48.000Z">
+<meta property="article:modified_time" content="2025-09-09T04:30:00.000Z">
+<meta property="article:author" content="Joy">
+<meta property="article:tag" content="github">
+<meta property="article:tag" content="ssh">
+<meta property="article:tag" content="git">
+<meta property="article:tag" content="网络问题">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "解决 git push 出现 port 22: Connection timed out",
+  "url": "https://sharpmind.tech/git-push-github-com-port-22-Connection-timed-out-fatal/",
+  "image": "https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg",
+  "datePublished": "2025-09-08T10:45:48.000Z",
+  "dateModified": "2025-09-09T04:30:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Joy",
+      "url": "https://sharpmind.tech"
+    }
+  ]
+}</script><link rel="shortcut icon" href="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png"><link rel="canonical" href="https://sharpmind.tech/git-push-github-com-port-22-Connection-timed-out-fatal/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//www.google-analytics.com" crossorigin=""/><link rel="preconnect" href="//hm.baidu.com"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-3570413384614130',
+  enable_page_level_ads: 'true'
+});</script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?a54c243eae7203c3dea8d0787608b48b";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-57L5KZJ4ZS"></script><script>window.dataLayer = window.dataLayer || []
+function gtag(){dataLayer.push(arguments)}
+gtag('js', new Date())
+gtag('config', 'G-57L5KZJ4ZS')
+btf.addGlobalFn('pjaxComplete', () => {
+  gtag('config', 'G-57L5KZJ4ZS', {'page_path': window.location.pathname})
+}, 'google_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: Joy","link":"链接: ","source":"来源: sharpmind.tech","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '解决 git push 出现 port 22: Connection timed out',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="sharpmind.tech" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="sharpmind.tech" type="application/rss+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png" alt="Logo"><span class="site-name">sharpmind.tech</span></a><a class="nav-page-title" href="/"><span class="site-name">解决 git push 出现 port 22: Connection timed out</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">解决 git push 出现 port 22: Connection timed out</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-08T10:45:48.000Z" title="发表于 2025-09-08 18:45:48">2025-09-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-09T04:30:00.000Z" title="更新于 2025-09-09 12:30:00">2025-09-09</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">695</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>2分钟</span></span><span class="post-meta-separator">|</span><span id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="umamiPV" data-path="/git-push-github-com-port-22-Connection-timed-out-fatal/"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h2 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h2><p>在日常使用 GitHub 的时候，有时会遇到这样的报错：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ssh: connect to host github.com port 22: Operation timed out</span><br><span class="line">fatal: Could not <span class="built_in">read</span> from remote repository.</span><br><span class="line">````</span><br><span class="line"></span><br><span class="line">我在测试时发现两种情况：</span><br><span class="line"></span><br><span class="line">* **关闭代理时**：</span><br><span class="line"></span><br><span class="line">  ```bash</span><br><span class="line">  git <span class="built_in">clone</span> git@github.com:kxzb-fun/ks.git</span><br><span class="line">  ssh: connect to host github.com port 22: Operation timed out</span><br></pre></td></tr></table></figure>
+
+<p>  → 直连 <code>github.com:22</code> 超时。</p>
+<ul>
+<li><p><strong>打开代理时</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> git@github.com:kxzb-fun/ks.git</span><br><span class="line">Connection closed by 127.0.0.1 port 7890</span><br></pre></td></tr></table></figure>
+
+<p>→ 说明流量被代理劫持到了本地端口 <code>127.0.0.1:7890</code>，但代理并没有正确处理 SSH，连接被直接关闭。</p>
+</li>
+</ul>
+<p>结论：<br><strong>22 端口被网络环境屏蔽，而代理又不支持 SSH 转发，导致 push&#x2F;pull 都失败。</strong></p>
+<h2 id="解决方案：使用-SSH-的-443-端口"><a href="#解决方案：使用-SSH-的-443-端口" class="headerlink" title="解决方案：使用 SSH 的 443 端口"></a>解决方案：使用 SSH 的 443 端口</h2><p>GitHub 默认用 22 端口提供 SSH 服务，但也贴心地在 <code>ssh.github.com:443</code> 提供了备用通道，专门为 22 被封的情况准备。</p>
+<ol>
+<li><p>编辑 SSH 配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim ~/.ssh/config</span><br></pre></td></tr></table></figure>
+
+<p>添加以下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Host github.com</span><br><span class="line">  HostName ssh.github.com</span><br><span class="line">  Port 443</span><br><span class="line">  User git</span><br><span class="line">  IdentityFile ~/.ssh/id_ed25519   # 或 ~/.ssh/id_rsa，按实际私钥</span><br><span class="line">  IdentitiesOnly yes</span><br><span class="line">  ServerAliveInterval 60</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>测试连通：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -T git@github.com</span><br></pre></td></tr></table></figure>
+
+<p>如果返回：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hi &lt;username&gt;! You<span class="string">&#x27;ve successfully authenticated, but GitHub does not provide shell access.</span></span><br></pre></td></tr></table></figure>
+
+<p>就说明 SSH 已经能正常连通。</p>
+</li>
+<li><p>之后正常使用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git push</span><br><span class="line">git pull</span><br><span class="line">git <span class="built_in">clone</span> git@github.com:&lt;username&gt;/&lt;repo&gt;.git</span><br></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h2 id="22-端口和-443-端口的区别"><a href="#22-端口和-443-端口的区别" class="headerlink" title="22 端口和 443 端口的区别"></a>22 端口和 443 端口的区别</h2><ul>
+<li><p><strong>22 端口</strong></p>
+<ul>
+<li>默认用于 <strong>SSH 协议</strong>。</li>
+<li>GitHub 的 <code>git@github.com:xxx/xxx.git</code> 默认就是走 22。</li>
+</ul>
+</li>
+<li><p><strong>443 端口</strong></p>
+<ul>
+<li>默认用于 <strong>HTTPS 协议（SSL&#x2F;TLS 加密）</strong>。</li>
+<li>但 GitHub 在 <code>ssh.github.com:443</code> 上 <strong>额外挂载了 SSH 服务</strong>，让 SSH 可以“伪装”成走 443，从而绕过防火墙限制。</li>
+</ul>
+</li>
+</ul>
+<p>所以，当你在 <code>~/.ssh/config</code> 里改成 443 时，走的依然是 <strong>SSH 协议</strong>，只是端口换成了 443。</p>
+<hr>
+<h2 id="为什么-22-容易被屏蔽？"><a href="#为什么-22-容易被屏蔽？" class="headerlink" title="为什么 22 容易被屏蔽？"></a>为什么 22 容易被屏蔽？</h2><ul>
+<li><strong>安全管控</strong>：公司、学校、公共 Wi-Fi 常常屏蔽 22，防止用户绕过内网直接 SSH 出去。</li>
+<li><strong>翻墙限制</strong>：有些地区的网络会专门封 22，因为很多代理&#x2F;隧道工具喜欢伪装成 SSH。</li>
+<li><strong>运营商策略</strong>：部分 ISP 屏蔽家庭宽带的 22，避免用户自己搭建服务器。</li>
+<li><strong>公共网络策略</strong>：咖啡厅、机场的 Wi-Fi 通常只开放 80 和 443，其他端口一律禁止。</li>
+</ul>
+<p>而 443 端口几乎不会被封，因为它是网页加密访问的必需端口。</p>
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li><code>ssh: connect to host github.com port 22: Connection timed out</code> 的核心原因是 <strong>22 端口被屏蔽</strong>。</li>
+<li>代理（127.0.0.1:7890）如果不支持 SSH，就会导致 <strong>Connection closed</strong>。</li>
+<li>最佳解决方案：修改 <code>~/.ssh/config</code>，改用 <strong>SSH over 443</strong>。</li>
+<li>443 是 HTTPS 默认端口，但 GitHub 特意在 443 上也提供了 SSH 服务，用来绕过限制。</li>
+</ol>
+<p>这样就能在任何网络环境下顺利 <code>git push / pull / clone</code> 了 🚀</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://sharpmind.tech">Joy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://sharpmind.tech/git-push-github-com-port-22-Connection-timed-out-fatal/">https://sharpmind.tech/git-push-github-com-port-22-Connection-timed-out-fatal/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow noreferrer" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://sharpmind.tech" target="_blank">sharpmind.tech</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/github/">github</a><a class="post-meta__tags" href="/tags/ssh/">ssh</a><a class="post-meta__tags" href="/tags/git/">git</a><a class="post-meta__tags" href="/tags/%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98/">网络问题</a></div><div class="post-share"><div class="social-share" data-image="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/%E6%9C%8D%E5%8A%A1%E5%99%A8OOM-Out-Of-Memory/" title="服务器OOM(Out Of Memory)"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">服务器OOM(Out Of Memory)</div></div><div class="info-2"><div class="info-item-1">记录服务器因内存不足触发 OOM Kill 的情况，以及相关解决思路。</div></div></div></a><a class="pagination-related" href="/Mac%E7%94%B5%E8%84%91%E4%B8%8A%E5%A6%82%E4%BD%95%E4%BF%AE%E6%94%B9%E4%B8%BB%E6%9C%BA%E5%90%8D%E7%A7%B0/" title="Mac电脑上如何修改主机名称"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Mac电脑上如何修改主机名称</div></div><div class="info-2"><div class="info-item-1">在我们新拿到Mac电脑或者重置系统后，打开终端(Terminal)会发现 里的 shell 提示符变成奇奇怪的数字 比如 junhua@192~ junhua@192~ 这个shell提示符对于的含义，其中：  junhua 👉 你当前登录的用户名 192 👉 你的电脑主机名 (hostname) ~ 👉 当前所在目录（这里的 ~ 是 home 目录的简写）  为什么会自动出现 192？当 Mac 没有正确配置主机名，或者在网络中名字冲突时，macOS 会自动给主机名起一个简短名字，例如：192、192-168-1-2 之类。 修改方法1sudo scutil --set HostName MacBookPro  修改之后需要重启终端，这样就会看到 junhua@MacBookPro ~，这样就是感觉好多了。 Mac电脑三个主机名称除了HostName还有另外两个值ComputerName和LocalHostName，其实是 macOS 对“电脑名字”的三个不同层次的定义。它们的作用场景不一样，所以经常会看到显示结果不一致。 我们可以通过以下命令获取： 123456scut...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/%E7%AE%A1%E7%90%86%E5%A4%9A%E4%B8%AA-SSH-Key/" title="同一台电脑管理多个 SSH Key"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/85bdabf6e774e0b5ff5e58a3ae61de8869431f0e-1816x906.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-03-03</div><div class="info-item-2">同一台电脑管理多个 SSH Key</div></div><div class="info-2"><div class="info-item-1">场景在同一台电脑上，可能需要管理多个 SSH Key，例如：  一个用于个人项目 一个用于工作项目  但是又不想切换各种配置文件，那么就可以使用本文的方法。 生成 SSH key在终端执行以下命令（推荐使用 ed25519 算法）： 1ssh-keygen -t ed25519 -C &quot;your_email@example.com&quot;  如果你需要兼容旧系统，可以使用 rsa： 1ssh-keygen -t rsa -b 4096 -C &quot;your_email@example.com&quot;   -t ed25519：使用更安全的 ed25519 算法 -b 4096：如果使用 rsa，建议 4096 位密钥 -C &quot;your_email@example.com&quot;：为 SSH Key 添加备注（通常是你的邮箱）  执行上面的命令后系统会提示你选择存储路径，默认存储在 ~/.ssh/id_ed25519（或 &#96;&#96;~&#x2F;.ssh&#x2F;id_rsa&#96;）。直接回车使用默认路径，或输入自定义路径。 你...</div></div></div></a><a class="pagination-related" href="/Github-Actions-%E6%9C%8D%E5%8A%A1%E5%99%A8-SSH%E9%85%8D%E7%BD%AE%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%93%E5%8C%85%E6%B5%81%E7%A8%8B/" title="Github Actions + 服务器 SSH配置自动化打包流程"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/469bbeb5751d7c87b8aa61e9ddc55704b8776d3e-1472x1104.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-03-04</div><div class="info-item-2">Github Actions + 服务器 SSH配置自动化打包流程</div></div><div class="info-2"><div class="info-item-1">如果我们有个小型的项目，运行在自己的服务器上，一般开发流程是本地开发，推送到github，然后自己手动登录服务器，拉取最新的代码并打包，然后把打出的包上线。 我们希望当我们在github上 push 代码的时候，github 能够自动通知服务器拉取最新的代码并打包，然后把打出的包上线。此时我们不用专门去搭建一套CI&#x2F;CD系统（比如jenkins、gitlab ci）。 最简单的方式可以怎么做呢？我们可以使用GitHub Actions来实现这个需求，具体方案如下。 步骤 1：配置 GitHub Secrets在 GitHub 仓库 设置：  Settings → Secrets and variables → Actions → New repository secret 添加： SSH_HOST = your-server-ip # 服务器IP SSH_USER = your-username # 服务器用户名 SSH_KEY = 你的 SSH 私钥（用 cat ~/.ssh/id_rsa 复制粘贴） # 你的开发机SSH私钥    在 github 的actions...</div></div></div></a><a class="pagination-related" href="/%E5%85%B3%E4%BA%8Egit-pull%E6%97%B6%E7%9A%84%E8%AD%A6%E5%91%8A/" title="关于git pull时的警告"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/171874bbb2327e202869a210f7cdebbc0d9ee5c6-800x539.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-03-05</div><div class="info-item-2">关于git pull时的警告</div></div><div class="info-2"><div class="info-item-1">当我们在git pull时，有时可能会遇到以下警告： 12345678910warning: 不建议在没有为偏离分支指定合并策略时执行 pull 操作。 您可以在执行下一次pull 操作之前执行下面一条命令来抑制本消息：  git config pull.rebase false  # 合并（缺省策略）  git config pull.rebase true   # 变基  git config pull.ff only       # 仅快进您可以将 &quot;git config&quot; 替换为 &quot;git config --global&quot; 以便为所有仓库设置缺省的配置项。您也可以在每次执行 pull 命令时添加 --rebase、--no-rebase，或者 --ff-only 参数覆盖缺省设置。   原因这个警告的意思是：Git 需要你指定 git pull 时如何处理远程和本地的变更，否则会给出提示。 你可以在 git pull 时选择以下三种模式：  1️⃣ 合并（默认） 2️⃣ 变基（rebase） 3️⃣ 仅快进（ff only）  不同...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Joy</div><div class="author-info-description">所知甚少，唯善学</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/kxzb-fun"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="mailto:sunday_ever.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div><p>Joy 的技术博客</p></div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E8%83%8C%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">问题背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9A%E4%BD%BF%E7%94%A8-SSH-%E7%9A%84-443-%E7%AB%AF%E5%8F%A3"><span class="toc-number">2.</span> <span class="toc-text">解决方案：使用 SSH 的 443 端口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#22-%E7%AB%AF%E5%8F%A3%E5%92%8C-443-%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">3.</span> <span class="toc-text">22 端口和 443 端口的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-22-%E5%AE%B9%E6%98%93%E8%A2%AB%E5%B1%8F%E8%94%BD%EF%BC%9F"><span class="toc-number">4.</span> <span class="toc-text">为什么 22 容易被屏蔽？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/33b1bf30a1bf9742714481c92e2c1a5fec816785-800x450.webp" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="hello rust 和cargo包管理器"/></a><div class="content"><a class="title" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器">hello rust 和cargo包管理器</a><time datetime="2025-12-20T03:36:50.000Z" title="发表于 2025-12-20 11:36:50">2025-12-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块初始化问题解决与主动更新策略"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略">Git子模块初始化问题解决与主动更新策略</a><time datetime="2025-12-19T12:43:00.000Z" title="发表于 2025-12-19 20:43:00">2025-12-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题">Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题</a><time datetime="2025-12-19T12:16:00.000Z" title="发表于 2025-12-19 20:16:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/" title="Rust 入门教程说明">Rust 入门教程说明</a><time datetime="2025-12-19T02:00:00.000Z" title="发表于 2025-12-19 10:00:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/Ubuntu24%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AE%89%E8%A3%85Docker%E6%97%B6%E6%8A%A5%E9%94%99%EF%BC%9Acurl-35-Recv-failure-Connection-reset-by-peer/" title="Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer">Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer</a><time datetime="2025-10-19T15:10:04.000Z" title="发表于 2025-10-19 23:10:04">2025-10-19</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2025 By Joy</span></div><div class="footer_custom_text"><a target="_blank" rel="noopener external nofollow noreferrer" href="https://beian.miit.gov.cn/#/Integrated/index" onmouseover="this.style.color='#ff7242'" onmouseout="this.style.color=''">冀ICP备2024089789号-1<a/></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>(() => {
+  const option = null
+  const config = {"site_uv":true,"site_pv":true,"page_pv":true,"token":null}
+
+  const runTrack = () => {
+    if (typeof umami !== 'undefined' && typeof umami.track === 'function') {
+      umami.track(props => ({ ...props, url: window.location.pathname, title: GLOBAL_CONFIG_SITE.title }))
+    } else {
+      console.warn('Umami Analytics: umami.track is not available')
+    }
+  }
+
+  const loadUmamiJS = () => {
+    btf.getScript('https://cloud.umami.is/script.js', {
+      'data-website-id': '6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87',
+      'data-auto-track': 'false',
+      ...option
+    }).then(() => {
+      runTrack()
+    }).catch(error => {
+      console.error('Umami Analytics: Error loading script', error)
+    })
+  }
+
+  const getData = async (isPost) => {
+    try {
+      const now = Date.now()
+      const keyUrl = isPost ? `&url=${window.location.pathname}&path=${window.location.pathname}` : ''
+      const headerList = { 'Accept': 'application/json' }
+
+      if (false) {
+        headerList['Authorization'] = `Bearer ${config.token}`
+      } else {
+        headerList['x-umami-api-key'] = config.token
+      }
+
+      const res = await fetch(`https://api.umami.is/v1/websites/6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87/stats?startAt=0000000000&endAt=${now}${keyUrl}`, {
+        method: "GET",
+        headers: headerList
+      })
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+
+      return await res.json()
+    } catch (error) {
+      console.error('Umami Analytics: Failed to fetch data', error)
+      throw error
+    }
+  }
+
+  const insertData = async () => {
+    try {
+      if (GLOBAL_CONFIG_SITE.pageType === 'post' && config.page_pv) {
+        const pagePV = document.getElementById('umamiPV')
+        if (pagePV) {
+          const data = await getData(true)
+          if (data && data.pageviews) {
+            pagePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else {
+            console.warn('Umami Analytics: Invalid page view data received')
+          }
+        }
+      }
+
+      if (config.site_uv || config.site_pv) {
+        const data = await getData(false)
+
+        if (config.site_uv) {
+          const siteUV = document.getElementById('umami-site-uv')
+          if (siteUV && data && data.visitors) {
+            siteUV.textContent = typeof data.visitors.value !== 'undefined' ? data.visitors.value : data.visitors
+          } else if (siteUV) {
+            console.warn('Umami Analytics: Invalid site UV data received')
+          }
+        }
+
+        if (config.site_pv) {
+          const sitePV = document.getElementById('umami-site-pv')
+          if (sitePV && data && data.pageviews) {
+            sitePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else if (sitePV) {
+            console.warn('Umami Analytics: Invalid site PV data received')
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Umami Analytics: Failed to insert data', error)
+    }
+  }
+
+  btf.addGlobalFn('pjaxComplete', runTrack, 'umami_analytics_run_track')
+  btf.addGlobalFn('pjaxComplete', insertData, 'umami_analytics_insert')
+
+
+  loadUmamiJS()
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', insertData)
+  } else {
+    setTimeout(insertData, 100)
+  }
+})()</script></div></body></html>

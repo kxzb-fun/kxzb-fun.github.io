@@ -1,0 +1,364 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>关于npm create 和 Vite | sharpmind.tech</title><meta name="author" content="Joy"><meta name="copyright" content="Joy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="本文主要梳理了 &#96;npm create&#96; 的功能，对比了 &#96;create-react-app&#96; 和 &#96;create-vite&#96; 的区别，并简单的实现了一个 &#96;create-myvite&#96; 的库学习创建逻辑。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于npm create 和 Vite">
+<meta property="og:url" content="https://sharpmind.tech/%E5%85%B3%E4%BA%8Enpm-create-%E5%92%8C-Vite/index.html">
+<meta property="og:site_name" content="sharpmind.tech">
+<meta property="og:description" content="本文主要梳理了 &#96;npm create&#96; 的功能，对比了 &#96;create-react-app&#96; 和 &#96;create-vite&#96; 的区别，并简单的实现了一个 &#96;create-myvite&#96; 的库学习创建逻辑。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg">
+<meta property="article:published_time" content="2025-09-05T03:25:55.000Z">
+<meta property="article:modified_time" content="2025-12-19T07:23:55.417Z">
+<meta property="article:author" content="Joy">
+<meta property="article:tag" content="vite">
+<meta property="article:tag" content="npm create">
+<meta property="article:tag" content="前端工具">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "关于npm create 和 Vite",
+  "url": "https://sharpmind.tech/%E5%85%B3%E4%BA%8Enpm-create-%E5%92%8C-Vite/",
+  "image": "https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg",
+  "datePublished": "2025-09-05T03:25:55.000Z",
+  "dateModified": "2025-12-19T07:23:55.417Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Joy",
+      "url": "https://sharpmind.tech"
+    }
+  ]
+}</script><link rel="shortcut icon" href="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png"><link rel="canonical" href="https://sharpmind.tech/%E5%85%B3%E4%BA%8Enpm-create-%E5%92%8C-Vite/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//www.google-analytics.com" crossorigin=""/><link rel="preconnect" href="//hm.baidu.com"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-3570413384614130',
+  enable_page_level_ads: 'true'
+});</script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?a54c243eae7203c3dea8d0787608b48b";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-57L5KZJ4ZS"></script><script>window.dataLayer = window.dataLayer || []
+function gtag(){dataLayer.push(arguments)}
+gtag('js', new Date())
+gtag('config', 'G-57L5KZJ4ZS')
+btf.addGlobalFn('pjaxComplete', () => {
+  gtag('config', 'G-57L5KZJ4ZS', {'page_path': window.location.pathname})
+}, 'google_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: Joy","link":"链接: ","source":"来源: sharpmind.tech","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '关于npm create 和 Vite',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="sharpmind.tech" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="sharpmind.tech" type="application/rss+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png" alt="Logo"><span class="site-name">sharpmind.tech</span></a><a class="nav-page-title" href="/"><span class="site-name">关于npm create 和 Vite</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">关于npm create 和 Vite</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-05T03:25:55.000Z" title="发表于 2025-09-05 11:25:55">2025-09-05</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-12-19T07:23:55.417Z" title="更新于 2025-12-19 15:23:55">2025-12-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%89%8D%E7%AB%AF/">前端</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span><span class="post-meta-separator">|</span><span id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="umamiPV" data-path="/%E5%85%B3%E4%BA%8Enpm-create-%E5%92%8C-Vite/"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><p>本文主要梳理了 <code>npm create</code> 的功能，对比了 <code>create-react-app</code> 和 <code>create-vite</code> 的区别，并简单的实现了一个 <code>create-myvite</code> 的库学习创建逻辑。</p>
+<h2 id="从npm-create-说起"><a href="#从npm-create-说起" class="headerlink" title="从npm create 说起"></a>从npm create 说起</h2><p><code>npm create</code>是npm命令的一部分，用于通过npm运行特定的脚本或包来创建新的项目。它简化了创建项目的过程，特别是当你需要基于某个模板或特定工具来初始化项目时。</p>
+<p>比如我们执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm create xxx</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><strong><code>npm create</code></strong>:<ul>
+<li><code>npm</code>是Node Package Manager的缩写，用于管理JavaScript包。</li>
+<li><code>create</code>是一个关键字，表示你要运行一个创建项目的脚本。</li>
+</ul>
+</li>
+<li><strong><code>xxx</code></strong>:<ul>
+<li><code>xxx</code>表示你要使用的创建器包的名称。这可以是<code>vite</code>，也可以是其他任何支持<code>npm create</code>命令的创建器包。</li>
+</ul>
+</li>
+</ol>
+<p>当你运行<code>npm create xxx</code>时，npm会执行以下步骤：</p>
+<ol>
+<li><strong>查找并下载创建器包</strong>：<ul>
+<li>npm会从注册表中下载名为<code>create-xxx</code>的包。例如，如果你运行<code>npm create vite</code>，npm实际上会查找并使用<code>create-vite</code>包。</li>
+</ul>
+</li>
+<li><strong>执行创建器包的逻辑</strong>：<ul>
+<li>下载并安装<code>create-xxx</code>包后，npm会运行该包的创建脚本。这通常会涉及到询问用户一些问题（如项目名称、模板选择等），然后根据用户的输入来生成项目结构和文件。</li>
+</ul>
+</li>
+</ol>
+<h2 id="create-vite-这个包具体做了什么"><a href="#create-vite-这个包具体做了什么" class="headerlink" title="create-vite 这个包具体做了什么"></a>create-vite 这个包具体做了什么</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm create vite@latest part1 -- --template react</span><br></pre></td></tr></table></figure>
+
+<p>这个命令用于通过Vite创建一个新的React项目。让我们逐步解释每个部分的含义：</p>
+<ol>
+<li><code>vite@latest</code>确保使用的是最新发布的版本。</li>
+<li><strong>part1</strong>: 这是新项目的名称。在这个例子中，项目将被创建在一个名为<code>part1</code>的文件夹中。</li>
+<li><strong>– –template react</strong>: 这部分指定了模板。<code>--template react</code>告诉Vite使用React模板来初始化项目。这意味着生成的项目将已经配置好React的相关依赖和文件结构。</li>
+</ol>
+<h3 id="询问用户输入"><a href="#询问用户输入" class="headerlink" title="询问用户输入"></a>询问用户输入</h3><p>当你运行 <code>npm create vite@latest</code> 时，<code>create-vite</code> 包会启动一个命令行交互界面，询问你一些基本问题，比如项目名称、要使用的模板（如 React、Vue、Svelte 等）以及其他配置选项。</p>
+<h3 id="创建项目目录和文件"><a href="#创建项目目录和文件" class="headerlink" title="创建项目目录和文件"></a>创建项目目录和文件</h3><ul>
+<li>根据用户输入，<code>create-vite</code> 会在指定的目录下生成项目结构和文件。这些文件包括：</li>
+<li><code>package.json</code>：定义项目的元数据和依赖。</li>
+<li><code>index.html</code>：项目的入口 HTML 文件。</li>
+<li><code>src</code> 目录：包含源代码，通常会包含一个基本的 <code>main.js</code> 或 <code>main.ts</code> 文件，以及一个示例组件。</li>
+<li>配置文件：如 <code>vite.config.js</code> 或 <code>vite.config.ts</code>，用于配置 Vite。</li>
+</ul>
+<h3 id="安装依赖"><a href="#安装依赖" class="headerlink" title="安装依赖"></a>安装依赖</h3><p>如果你选择了特定的模板，<code>create-vite</code> 会自动添加相关的依赖到 <code>package.json</code> 中，并且会提供安装依赖的提示</p>
+<h3 id="提供运行指令"><a href="#提供运行指令" class="headerlink" title="提供运行指令"></a>提供运行指令</h3><p>创建项目后，<code>create-vite</code> 会提示你下一步的操作，例如进入项目目录并运行开发服务器的命令（通常是 <code>npm install</code> 然后 <code>npm run dev</code>）。</p>
+<h2 id="自己动手写一个脚手架"><a href="#自己动手写一个脚手架" class="headerlink" title="自己动手写一个脚手架"></a>自己动手写一个脚手架</h2><h3 id="步骤-1：初始化项目"><a href="#步骤-1：初始化项目" class="headerlink" title="步骤 1：初始化项目"></a>步骤 1：初始化项目</h3><p>首先，创建一个新的 Node.js 项目：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> create-myvite</span><br><span class="line"><span class="built_in">cd</span> create-myvite</span><br><span class="line">npm init -y</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="步骤-2：安装依赖"><a href="#步骤-2：安装依赖" class="headerlink" title="步骤 2：安装依赖"></a>步骤 2：安装依赖</h3><p>安装所需的依赖库，比如 <code>inquirer</code> 用于命令行交互，<code>fs-extra</code> 用于文件操作：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install inquirer fs-extra</span><br></pre></td></tr></table></figure>
+
+<h3 id="步骤-3：编写脚本"><a href="#步骤-3：编写脚本" class="headerlink" title="步骤 3：编写脚本"></a>步骤 3：编写脚本</h3><p>index.mjs 文件</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env node</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> inquirer <span class="keyword">from</span> <span class="string">&#x27;inquirer&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> fs <span class="keyword">from</span> <span class="string">&#x27;fs-extra&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> path <span class="keyword">from</span> <span class="string">&#x27;path&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; fileURLToPath &#125; <span class="keyword">from</span> <span class="string">&#x27;url&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// These lines are necessary to get __dirname in an ES module</span></span><br><span class="line"><span class="keyword">const</span> __filename = <span class="title function_">fileURLToPath</span>(<span class="keyword">import</span>.<span class="property">meta</span>.<span class="property">url</span>);</span><br><span class="line"><span class="keyword">const</span> __dirname = path.<span class="title function_">dirname</span>(__filename);</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">createProject</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> answers = <span class="keyword">await</span> inquirer.<span class="title function_">prompt</span>([</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">type</span>: <span class="string">&#x27;input&#x27;</span>,</span><br><span class="line">      <span class="attr">name</span>: <span class="string">&#x27;projectName&#x27;</span>,</span><br><span class="line">      <span class="attr">message</span>: <span class="string">&#x27;Project name:&#x27;</span>,</span><br><span class="line">      <span class="attr">default</span>: <span class="string">&#x27;my-vite-project&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">type</span>: <span class="string">&#x27;list&#x27;</span>,</span><br><span class="line">      <span class="attr">name</span>: <span class="string">&#x27;template&#x27;</span>,</span><br><span class="line">      <span class="attr">message</span>: <span class="string">&#x27;Select a template:&#x27;</span>,</span><br><span class="line">      <span class="attr">choices</span>: [<span class="string">&#x27;vanilla&#x27;</span>, <span class="string">&#x27;react&#x27;</span>, <span class="string">&#x27;vue&#x27;</span>]</span><br><span class="line">    &#125;</span><br><span class="line">  ]);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> &#123; projectName, template &#125; = answers;</span><br><span class="line">  <span class="keyword">const</span> projectPath = path.<span class="title function_">join</span>(process.<span class="title function_">cwd</span>(), projectName);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (fs.<span class="title function_">existsSync</span>(projectPath)) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">`Error: Directory <span class="subst">$&#123;projectName&#125;</span> already exists.`</span>);</span><br><span class="line">    process.<span class="title function_">exit</span>(<span class="number">1</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  fs.<span class="title function_">mkdirSync</span>(projectPath);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Create a basic Vite project structure</span></span><br><span class="line">  fs.<span class="title function_">writeFileSync</span>(path.<span class="title function_">join</span>(projectPath, <span class="string">&#x27;index.html&#x27;</span>), <span class="string">`&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="string">&lt;html lang=&quot;en&quot;&gt;</span></span><br><span class="line"><span class="string">  &lt;head&gt;</span></span><br><span class="line"><span class="string">    &lt;meta charset=&quot;UTF-8&quot; /&gt;</span></span><br><span class="line"><span class="string">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;</span></span><br><span class="line"><span class="string">    &lt;title&gt;Vite App&lt;/title&gt;</span></span><br><span class="line"><span class="string">  &lt;/head&gt;</span></span><br><span class="line"><span class="string">  &lt;body&gt;</span></span><br><span class="line"><span class="string">    &lt;div id=&quot;app&quot;&gt;&lt;/div&gt;</span></span><br><span class="line"><span class="string">    &lt;script type=&quot;module&quot; src=&quot;/src/main.js&quot;&gt;&lt;/script&gt;</span></span><br><span class="line"><span class="string">  &lt;/body&gt;</span></span><br><span class="line"><span class="string">&lt;/html&gt;`</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">let</span> dependencies = &#123;&#125;;</span><br><span class="line">  <span class="keyword">let</span> devDependencies = &#123;</span><br><span class="line">    <span class="attr">vite</span>: <span class="string">&quot;^3.0.0&quot;</span></span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> srcDir = path.<span class="title function_">join</span>(projectPath, <span class="string">&#x27;src&#x27;</span>);</span><br><span class="line">  fs.<span class="title function_">mkdirSync</span>(srcDir);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (template === <span class="string">&#x27;react&#x27;</span>) &#123;</span><br><span class="line">    dependencies.<span class="property">react</span> = <span class="string">&#x27;^17.0.0&#x27;</span>;</span><br><span class="line">    dependencies[<span class="string">&#x27;react-dom&#x27;</span>] = <span class="string">&#x27;^17.0.0&#x27;</span>;</span><br><span class="line"></span><br><span class="line">    fs.<span class="title function_">writeFileSync</span>(path.<span class="title function_">join</span>(srcDir, <span class="string">&#x27;main.jsx&#x27;</span>), <span class="string">`import React from &#x27;react&#x27;;</span></span><br><span class="line"><span class="string">import ReactDOM from &#x27;react-dom&#x27;;</span></span><br><span class="line"><span class="string">import App from &#x27;./App&#x27;;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">ReactDOM.createRoot(document.getElementById(&#x27;app&#x27;)).render(&lt;App /&gt;);`</span>);</span><br><span class="line"></span><br><span class="line">    fs.<span class="title function_">writeFileSync</span>(path.<span class="title function_">join</span>(srcDir, <span class="string">&#x27;App.jsx&#x27;</span>), <span class="string">`import React from &#x27;react&#x27;;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">function App() &#123;</span></span><br><span class="line"><span class="string">  return &lt;h1&gt;Hello, Vite + React!&lt;/h1&gt;;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">export default App;`</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (template === <span class="string">&#x27;vue&#x27;</span>) &#123;</span><br><span class="line">    dependencies.<span class="property">vue</span> = <span class="string">&#x27;^3.0.0&#x27;</span>;</span><br><span class="line">    devDependencies[<span class="string">&#x27;@vitejs/plugin-vue&#x27;</span>] = <span class="string">&#x27;^2.0.0&#x27;</span>;</span><br><span class="line"></span><br><span class="line">    fs.<span class="title function_">writeFileSync</span>(path.<span class="title function_">join</span>(srcDir, <span class="string">&#x27;main.js&#x27;</span>), <span class="string">`import &#123; createApp &#125; from &#x27;vue&#x27;;</span></span><br><span class="line"><span class="string">import App from &#x27;./App.vue&#x27;;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">createApp(App).mount(&#x27;#app&#x27;);`</span>);</span><br><span class="line"></span><br><span class="line">    fs.<span class="title function_">writeFileSync</span>(path.<span class="title function_">join</span>(srcDir, <span class="string">&#x27;App.vue&#x27;</span>), <span class="string">`&lt;template&gt;</span></span><br><span class="line"><span class="string">  &lt;h1&gt;Hello, Vite + Vue!&lt;/h1&gt;</span></span><br><span class="line"><span class="string">&lt;/template&gt;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">&lt;script&gt;</span></span><br><span class="line"><span class="string">export default &#123;</span></span><br><span class="line"><span class="string">  name: &#x27;App&#x27;</span></span><br><span class="line"><span class="string">&#125;;</span></span><br><span class="line"><span class="string">&lt;/script&gt;`</span>);</span><br><span class="line"></span><br><span class="line">    fs.<span class="title function_">writeFileSync</span>(path.<span class="title function_">join</span>(projectPath, <span class="string">&#x27;vite.config.js&#x27;</span>), <span class="string">`import &#123; defineConfig &#125; from &#x27;vite&#x27;;</span></span><br><span class="line"><span class="string">import vue from &#x27;@vitejs/plugin-vue&#x27;;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">export default defineConfig(&#123;</span></span><br><span class="line"><span class="string">  plugins: [vue()]</span></span><br><span class="line"><span class="string">&#125;);</span></span><br><span class="line"><span class="string">`</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fs.<span class="title function_">writeFileSync</span>(path.<span class="title function_">join</span>(srcDir, <span class="string">&#x27;main.js&#x27;</span>), <span class="string">`document.getElementById(&#x27;app&#x27;).innerHTML = &#x27;&lt;h1&gt;Hello, Vite!&lt;/h1&gt;&#x27;;`</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  fs.<span class="title function_">writeFileSync</span>(</span><br><span class="line">    path.<span class="title function_">join</span>(projectPath, <span class="string">&quot;package.json&quot;</span>),</span><br><span class="line">    <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(&#123;</span><br><span class="line">      <span class="attr">name</span>: projectName,</span><br><span class="line">      <span class="attr">version</span>: <span class="string">&quot;0.0.1&quot;</span>,</span><br><span class="line">      <span class="attr">scripts</span>: &#123;</span><br><span class="line">        <span class="attr">dev</span>: <span class="string">&quot;vite&quot;</span>,</span><br><span class="line">        <span class="attr">build</span>: <span class="string">&quot;vite build&quot;</span>,</span><br><span class="line">        <span class="attr">serve</span>: <span class="string">&quot;vite preview&quot;</span></span><br><span class="line">      &#125;,</span><br><span class="line">      dependencies,</span><br><span class="line">      devDependencies</span><br><span class="line">    &#125;, <span class="literal">null</span>, <span class="number">2</span>)</span><br><span class="line">  );</span><br><span class="line"></span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`Project <span class="subst">$&#123;projectName&#125;</span> created successfully.`</span>);</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`Navigate to the project directory and run &#x27;npm install&#x27; to install dependencies.`</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">createProject</span>();</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>package.json文件</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;create-myvite&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;module&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;main&quot;</span><span class="punctuation">:</span> <span class="string">&quot;index.mjs&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;bin&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;create-myvite&quot;</span><span class="punctuation">:</span> <span class="string">&quot;./index.mjs&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;dependencies&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;inquirer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^8.1.2&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;fs-extra&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^10.0.0&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="步骤-4：添加执行权限和链接"><a href="#步骤-4：添加执行权限和链接" class="headerlink" title="步骤 4：添加执行权限和链接"></a>步骤 4：添加执行权限和链接</h3><p>使 <code>index.mjs</code> 文件可执行，并创建全局链接：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> +x index.mjs</span><br><span class="line">npm <span class="built_in">link</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="运行示例"><a href="#运行示例" class="headerlink" title="运行示例"></a>运行示例</h3><p>运行以下命令来创建一个新项目：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create-myvite</span><br></pre></td></tr></table></figure>
+
+<h2 id="create-vite-和-CRA（create-react-app）比较"><a href="#create-vite-和-CRA（create-react-app）比较" class="headerlink" title="create-vite 和 CRA（create-react-app）比较"></a><code>create-vite</code> 和 CRA（<code>create-react-app</code>）比较</h2><h3 id="相似之处"><a href="#相似之处" class="headerlink" title="相似之处"></a>相似之处</h3><ol>
+<li><strong>快速搭建应用程序：</strong> 两者都旨在简化新项目的搭建过程。通过运行一个命令，你可以快速创建一个基本的项目结构，并且可以立即开始编写代码。</li>
+<li><strong>现代化的工具链：</strong> 两者都使用了现代化的工具链，包括 Babel、Webpack、ESLint 等，以确保你可以使用最新的 JavaScript 特性，并且具备良好的开发体验。</li>
+<li><strong>默认配置：</strong> 默认情况下，它们提供了一个预配置的开发环境，包括热重载、代码分割、生产构建等功能。</li>
+</ol>
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><ol>
+<li><strong>构建工具：</strong> 最明显的区别是它们使用的构建工具不同。<code>create-react-app</code> 使用的是 Webpack，而 <code>create-vite</code> 使用的是 Vite。Vite 是一个由 Vue.js 核心团队开发的新型前端构建工具，它利用了现代浏览器对 ES 模块的原生支持，能够实现非常快速的开发构建速度。</li>
+<li><strong>模块热更新（HMR）：</strong> <code>create-vite</code> 基于 Vite，利用了浏览器原生支持的 ES 模块特性，因此具有更快的热更新速度。而 <code>create-react-app</code> 使用的 HMR 则是基于 Webpack 的实现，速度相对较慢。</li>
+<li><strong>生态系统：</strong> 由于 <code>create-react-app</code> 是由 Facebook 团队维护的，因此它更倾向于与 React 生态系统无缝集成。相比之下，<code>create-vite</code> 在刚推出时可能会受到生态系统限制，但由于 Vite 本身已经得到了 Vue.js 社区的广泛支持，因此其生态系统也在不断壮大。</li>
+<li><strong>生产构建方式：</strong> <code>create-react-app</code> 使用 Webpack 来构建生产环境的代码，而 <code>create-vite</code> 则使用 Rollup 来构建生产代码。Rollup 是一个专注于构建 JavaScript 库的工具，通常被认为比 Webpack 更适合用于构建库和框架。</li>
+</ol>
+<p>总的来说，<code>create-vite</code> 相对于 <code>create-react-app</code> 更加轻量、快速，尤其适合于构建 Vue.js 项目或者需要更快速开发体验的应用程序。但在选择工具时，还应考虑到项目的具体需求和团队的熟悉程度。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://sharpmind.tech">Joy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://sharpmind.tech/%E5%85%B3%E4%BA%8Enpm-create-%E5%92%8C-Vite/">https://sharpmind.tech/%E5%85%B3%E4%BA%8Enpm-create-%E5%92%8C-Vite/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow noreferrer" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://sharpmind.tech" target="_blank">sharpmind.tech</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/vite/">vite</a><a class="post-meta__tags" href="/tags/npm-create/">npm create</a><a class="post-meta__tags" href="/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E5%85%B7/">前端工具</a></div><div class="post-share"><div class="social-share" data-image="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/Mac%E7%94%B5%E8%84%91%E4%B8%8A%E5%A6%82%E4%BD%95%E4%BF%AE%E6%94%B9%E4%B8%BB%E6%9C%BA%E5%90%8D%E7%A7%B0/" title="Mac电脑上如何修改主机名称"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Mac电脑上如何修改主机名称</div></div><div class="info-2"><div class="info-item-1">在我们新拿到Mac电脑或者重置系统后，打开终端(Terminal)会发现 里的 shell 提示符变成奇奇怪的数字 比如 junhua@192~ junhua@192~ 这个shell提示符对于的含义，其中：  junhua 👉 你当前登录的用户名 192 👉 你的电脑主机名 (hostname) ~ 👉 当前所在目录（这里的 ~ 是 home 目录的简写）  为什么会自动出现 192？当 Mac 没有正确配置主机名，或者在网络中名字冲突时，macOS 会自动给主机名起一个简短名字，例如：192、192-168-1-2 之类。 修改方法1sudo scutil --set HostName MacBookPro  修改之后需要重启终端，这样就会看到 junhua@MacBookPro ~，这样就是感觉好多了。 Mac电脑三个主机名称除了HostName还有另外两个值ComputerName和LocalHostName，其实是 macOS 对“电脑名字”的三个不同层次的定义。它们的作用场景不一样，所以经常会看到显示结果不一致。 我们可以通过以下命令获取： 123456scut...</div></div></div></a><a class="pagination-related" href="/Shell-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%80%BB%E7%BB%93/" title="Shell 常用命令总结"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/33cf5ae7533118a8edddd617722021b94945c6e0-1800x1200.webp" onerror="onerror=null;src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Shell 常用命令总结</div></div><div class="info-2"><div class="info-item-1">总结一下shell最常用的命令，不断更新 echo命令你可以使用 echo 命令并通过 &gt;&gt; 追加数据到文件末尾。例如： 1echo &quot;追加的内容&quot; &gt;&gt; 文件名  示例向 myfile.txt 追加一行文本 1echo &quot;这是新追加的内容&quot; &gt;&gt; myfile.txt  向 myfile.txt 追加多行内容 1echo -e &quot;第一行\n第二行\n第三行&quot; &gt;&gt; myfile.txt   -e 选项用于启用 \n 换行符。  追加当前日期时间 12echo &quot;$(date) - 日志内容&quot; &gt;&gt; log.txt </div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Joy</div><div class="author-info-description">所知甚少，唯善学</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/kxzb-fun"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="mailto:sunday_ever.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div><p>Joy 的技术博客</p></div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8Enpm-create-%E8%AF%B4%E8%B5%B7"><span class="toc-number">1.</span> <span class="toc-text">从npm create 说起</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#create-vite-%E8%BF%99%E4%B8%AA%E5%8C%85%E5%85%B7%E4%BD%93%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">2.</span> <span class="toc-text">create-vite 这个包具体做了什么</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%A2%E9%97%AE%E7%94%A8%E6%88%B7%E8%BE%93%E5%85%A5"><span class="toc-number">2.1.</span> <span class="toc-text">询问用户输入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E9%A1%B9%E7%9B%AE%E7%9B%AE%E5%BD%95%E5%92%8C%E6%96%87%E4%BB%B6"><span class="toc-number">2.2.</span> <span class="toc-text">创建项目目录和文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96"><span class="toc-number">2.3.</span> <span class="toc-text">安装依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%90%E4%BE%9B%E8%BF%90%E8%A1%8C%E6%8C%87%E4%BB%A4"><span class="toc-number">2.4.</span> <span class="toc-text">提供运行指令</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99%E4%B8%80%E4%B8%AA%E8%84%9A%E6%89%8B%E6%9E%B6"><span class="toc-number">3.</span> <span class="toc-text">自己动手写一个脚手架</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-1%EF%BC%9A%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE"><span class="toc-number">3.1.</span> <span class="toc-text">步骤 1：初始化项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-2%EF%BC%9A%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96"><span class="toc-number">3.2.</span> <span class="toc-text">步骤 2：安装依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-3%EF%BC%9A%E7%BC%96%E5%86%99%E8%84%9A%E6%9C%AC"><span class="toc-number">3.3.</span> <span class="toc-text">步骤 3：编写脚本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-4%EF%BC%9A%E6%B7%BB%E5%8A%A0%E6%89%A7%E8%A1%8C%E6%9D%83%E9%99%90%E5%92%8C%E9%93%BE%E6%8E%A5"><span class="toc-number">3.4.</span> <span class="toc-text">步骤 4：添加执行权限和链接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E7%A4%BA%E4%BE%8B"><span class="toc-number">3.5.</span> <span class="toc-text">运行示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#create-vite-%E5%92%8C-CRA%EF%BC%88create-react-app%EF%BC%89%E6%AF%94%E8%BE%83"><span class="toc-number">4.</span> <span class="toc-text">create-vite 和 CRA（create-react-app）比较</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%B8%E4%BC%BC%E4%B9%8B%E5%A4%84"><span class="toc-number">4.1.</span> <span class="toc-text">相似之处</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8C%BA%E5%88%AB"><span class="toc-number">4.2.</span> <span class="toc-text">区别</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/33b1bf30a1bf9742714481c92e2c1a5fec816785-800x450.webp" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="hello rust 和cargo包管理器"/></a><div class="content"><a class="title" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器">hello rust 和cargo包管理器</a><time datetime="2025-12-20T03:36:50.000Z" title="发表于 2025-12-20 11:36:50">2025-12-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块初始化问题解决与主动更新策略"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略">Git子模块初始化问题解决与主动更新策略</a><time datetime="2025-12-19T12:43:00.000Z" title="发表于 2025-12-19 20:43:00">2025-12-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题">Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题</a><time datetime="2025-12-19T12:16:00.000Z" title="发表于 2025-12-19 20:16:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/" title="Rust 入门教程说明">Rust 入门教程说明</a><time datetime="2025-12-19T02:00:00.000Z" title="发表于 2025-12-19 10:00:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/Ubuntu24%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AE%89%E8%A3%85Docker%E6%97%B6%E6%8A%A5%E9%94%99%EF%BC%9Acurl-35-Recv-failure-Connection-reset-by-peer/" title="Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer">Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer</a><time datetime="2025-10-19T15:10:04.000Z" title="发表于 2025-10-19 23:10:04">2025-10-19</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2025 By Joy</span></div><div class="footer_custom_text"><a target="_blank" rel="noopener external nofollow noreferrer" href="https://beian.miit.gov.cn/#/Integrated/index" onmouseover="this.style.color='#ff7242'" onmouseout="this.style.color=''">冀ICP备2024089789号-1<a/></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>(() => {
+  const option = null
+  const config = {"site_uv":true,"site_pv":true,"page_pv":true,"token":null}
+
+  const runTrack = () => {
+    if (typeof umami !== 'undefined' && typeof umami.track === 'function') {
+      umami.track(props => ({ ...props, url: window.location.pathname, title: GLOBAL_CONFIG_SITE.title }))
+    } else {
+      console.warn('Umami Analytics: umami.track is not available')
+    }
+  }
+
+  const loadUmamiJS = () => {
+    btf.getScript('https://cloud.umami.is/script.js', {
+      'data-website-id': '6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87',
+      'data-auto-track': 'false',
+      ...option
+    }).then(() => {
+      runTrack()
+    }).catch(error => {
+      console.error('Umami Analytics: Error loading script', error)
+    })
+  }
+
+  const getData = async (isPost) => {
+    try {
+      const now = Date.now()
+      const keyUrl = isPost ? `&url=${window.location.pathname}&path=${window.location.pathname}` : ''
+      const headerList = { 'Accept': 'application/json' }
+
+      if (false) {
+        headerList['Authorization'] = `Bearer ${config.token}`
+      } else {
+        headerList['x-umami-api-key'] = config.token
+      }
+
+      const res = await fetch(`https://api.umami.is/v1/websites/6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87/stats?startAt=0000000000&endAt=${now}${keyUrl}`, {
+        method: "GET",
+        headers: headerList
+      })
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+
+      return await res.json()
+    } catch (error) {
+      console.error('Umami Analytics: Failed to fetch data', error)
+      throw error
+    }
+  }
+
+  const insertData = async () => {
+    try {
+      if (GLOBAL_CONFIG_SITE.pageType === 'post' && config.page_pv) {
+        const pagePV = document.getElementById('umamiPV')
+        if (pagePV) {
+          const data = await getData(true)
+          if (data && data.pageviews) {
+            pagePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else {
+            console.warn('Umami Analytics: Invalid page view data received')
+          }
+        }
+      }
+
+      if (config.site_uv || config.site_pv) {
+        const data = await getData(false)
+
+        if (config.site_uv) {
+          const siteUV = document.getElementById('umami-site-uv')
+          if (siteUV && data && data.visitors) {
+            siteUV.textContent = typeof data.visitors.value !== 'undefined' ? data.visitors.value : data.visitors
+          } else if (siteUV) {
+            console.warn('Umami Analytics: Invalid site UV data received')
+          }
+        }
+
+        if (config.site_pv) {
+          const sitePV = document.getElementById('umami-site-pv')
+          if (sitePV && data && data.pageviews) {
+            sitePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else if (sitePV) {
+            console.warn('Umami Analytics: Invalid site PV data received')
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Umami Analytics: Failed to insert data', error)
+    }
+  }
+
+  btf.addGlobalFn('pjaxComplete', runTrack, 'umami_analytics_run_track')
+  btf.addGlobalFn('pjaxComplete', insertData, 'umami_analytics_insert')
+
+
+  loadUmamiJS()
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', insertData)
+  } else {
+    setTimeout(insertData, 100)
+  }
+})()</script></div></body></html>

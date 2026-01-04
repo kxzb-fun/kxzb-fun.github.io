@@ -1,0 +1,441 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>docker-基础入门：工作流+实践 | sharpmind.tech</title><meta name="author" content="Joy"><meta name="copyright" content="Joy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="简介本项目针对刚刚接触 Docker 的新手，讲解 Docker 基本操作，并结合一个实际案例来讲解具体应用。 环境说明操作系统：MacOS Ventura 13.0 安装 Docker通过官方网站地址选择对应的操作系统进行安装即可 官方连接 查看 Docker 版本1docker version  安装成功会显示如下信息（MacOS 版） 1234567891011121314151617181">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker-基础入门：工作流+实践">
+<meta property="og:url" content="https://sharpmind.tech/docker-%E5%9F%BA%E7%A1%80%E5%85%A5%E9%97%A8%EF%BC%9A%E5%B7%A5%E4%BD%9C%E6%B5%81-%E5%AE%9E%E8%B7%B5/index.html">
+<meta property="og:site_name" content="sharpmind.tech">
+<meta property="og:description" content="简介本项目针对刚刚接触 Docker 的新手，讲解 Docker 基本操作，并结合一个实际案例来讲解具体应用。 环境说明操作系统：MacOS Ventura 13.0 安装 Docker通过官方网站地址选择对应的操作系统进行安装即可 官方连接 查看 Docker 版本1docker version  安装成功会显示如下信息（MacOS 版） 1234567891011121314151617181">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.sanity.io/images/1y08pmef/production/fd8c1cdc5fae27af9feebcd1400a105bbfa9f737-891x500.webp">
+<meta property="article:published_time" content="2023-07-29T03:33:38.000Z">
+<meta property="article:modified_time" content="2025-12-19T07:23:55.412Z">
+<meta property="article:author" content="Joy">
+<meta property="article:tag" content="sharpmind.tech">
+<meta property="article:tag" content="sharpmind">
+<meta property="article:tag" content="Joy的技术博客">
+<meta property="article:tag" content="个人博客">
+<meta property="article:tag" content="程序员">
+<meta property="article:tag" content="js">
+<meta property="article:tag" content="javascript">
+<meta property="article:tag" content="next.js">
+<meta property="article:tag" content="react">
+<meta property="article:tag" content="vue">
+<meta property="article:tag" content="vite">
+<meta property="article:tag" content="技术博客">
+<meta property="article:tag" content="博客搭建">
+<meta property="article:tag" content="认知提升">
+<meta property="article:tag" content="终身成长">
+<meta property="article:tag" content="读书分享">
+<meta property="article:tag" content="前端开发">
+<meta property="article:tag" content="全栈开发">
+<meta property="article:tag" content="大学生作业">
+<meta property="article:tag" content="大学生毕业设计">
+<meta property="article:tag" content="Rust最新教程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.sanity.io/images/1y08pmef/production/fd8c1cdc5fae27af9feebcd1400a105bbfa9f737-891x500.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "docker-基础入门：工作流+实践",
+  "url": "https://sharpmind.tech/docker-%E5%9F%BA%E7%A1%80%E5%85%A5%E9%97%A8%EF%BC%9A%E5%B7%A5%E4%BD%9C%E6%B5%81-%E5%AE%9E%E8%B7%B5/",
+  "image": "https://cdn.sanity.io/images/1y08pmef/production/fd8c1cdc5fae27af9feebcd1400a105bbfa9f737-891x500.webp",
+  "datePublished": "2023-07-29T03:33:38.000Z",
+  "dateModified": "2025-12-19T07:23:55.412Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Joy",
+      "url": "https://sharpmind.tech"
+    }
+  ]
+}</script><link rel="shortcut icon" href="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png"><link rel="canonical" href="https://sharpmind.tech/docker-%E5%9F%BA%E7%A1%80%E5%85%A5%E9%97%A8%EF%BC%9A%E5%B7%A5%E4%BD%9C%E6%B5%81-%E5%AE%9E%E8%B7%B5/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//www.google-analytics.com" crossorigin=""/><link rel="preconnect" href="//hm.baidu.com"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-3570413384614130',
+  enable_page_level_ads: 'true'
+});</script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?a54c243eae7203c3dea8d0787608b48b";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-57L5KZJ4ZS"></script><script>window.dataLayer = window.dataLayer || []
+function gtag(){dataLayer.push(arguments)}
+gtag('js', new Date())
+gtag('config', 'G-57L5KZJ4ZS')
+btf.addGlobalFn('pjaxComplete', () => {
+  gtag('config', 'G-57L5KZJ4ZS', {'page_path': window.location.pathname})
+}, 'google_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: Joy","link":"链接: ","source":"来源: sharpmind.tech","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'docker-基础入门：工作流+实践',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="sharpmind.tech" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="sharpmind.tech" type="application/rss+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png" alt="Logo"><span class="site-name">sharpmind.tech</span></a><a class="nav-page-title" href="/"><span class="site-name">docker-基础入门：工作流+实践</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">docker-基础入门：工作流+实践</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-07-29T03:33:38.000Z" title="发表于 2023-07-29 11:33:38">2023-07-29</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-12-19T07:23:55.412Z" title="更新于 2025-12-19 15:23:55">2025-12-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Docker/">Docker</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="umamiPV" data-path="/docker-%E5%9F%BA%E7%A1%80%E5%85%A5%E9%97%A8%EF%BC%9A%E5%B7%A5%E4%BD%9C%E6%B5%81-%E5%AE%9E%E8%B7%B5/"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>本项目针对刚刚接触 Docker 的新手，讲解 Docker 基本操作，并结合一个实际案例来讲解具体应用。</p>
+<h2 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h2><p>操作系统：MacOS Ventura 13.0</p>
+<h2 id="安装-Docker"><a href="#安装-Docker" class="headerlink" title="安装 Docker"></a>安装 Docker</h2><p>通过官方网站地址选择对应的操作系统进行安装即可 <a target="_blank" rel="noopener external nofollow noreferrer" href="https://docs.docker.com/get-docker/">官方连接</a></p>
+<h3 id="查看-Docker-版本"><a href="#查看-Docker-版本" class="headerlink" title="查看 Docker 版本"></a>查看 Docker 版本</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker version</span><br></pre></td></tr></table></figure>
+
+<p>安装成功会显示如下信息（MacOS 版）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">Client:</span><br><span class="line"> Cloud integration: v1.0.35</span><br><span class="line"> Version:   24.0.2</span><br><span class="line"> API version:   1.43</span><br><span class="line"> Go version:go1.20.4</span><br><span class="line"> Git commit:cb74dfc</span><br><span class="line"> Built: Thu May 25 21:51:16 2023</span><br><span class="line"> OS/Arch:   darwin/amd64</span><br><span class="line"> Context:   desktop-linux</span><br><span class="line">Server: Docker Desktop 4.21.1 (114176)</span><br><span class="line"> Engine:</span><br><span class="line">  Version:  24.0.2</span><br><span class="line">  API version:  1.43 (minimum version 1.12)</span><br><span class="line">  Go version:   go1.20.4</span><br><span class="line">  Git commit:   659604f</span><br><span class="line">  Built:Thu May 25 21:52:17 2023</span><br><span class="line">  OS/Arch:  linux/amd64</span><br><span class="line">  Experimental: <span class="literal">false</span></span><br><span class="line"> containerd:</span><br><span class="line">  Version:  1.6.21</span><br><span class="line">  GitCommit:3dce8eb055cbb6872793272b4f20ed16117344f8</span><br><span class="line"> runc:</span><br><span class="line">  Version:  1.1.7</span><br><span class="line">  GitCommit:v1.1.7-0-g860f061</span><br><span class="line"> docker-init:</span><br><span class="line">  Version:  0.19.0</span><br><span class="line">  GitCommit:de40ad0</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建本地项目"><a href="#创建本地项目" class="headerlink" title="创建本地项目"></a>创建本地项目</h2><h3 id="初始化项目"><a href="#初始化项目" class="headerlink" title="初始化项目"></a>初始化项目</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> learn-docker</span><br><span class="line">npm init -y</span><br><span class="line">npm install express</span><br></pre></td></tr></table></figure>
+
+<h3 id="启动简单的服务"><a href="#启动简单的服务" class="headerlink" title="启动简单的服务"></a>启动简单的服务</h3><p>创建 app.js 文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">const express = require(<span class="string">&quot;express&quot;</span>);</span><br><span class="line">const app = express();</span><br><span class="line">const PORT = 3000;</span><br><span class="line">app.get(<span class="string">&quot;/&quot;</span>, (req, res) =&gt; &#123;</span><br><span class="line">  res.send(<span class="string">&quot;&lt;p&gt;大家好啊！&lt;/p&gt;&quot;</span>);</span><br><span class="line">&#125;);</span><br><span class="line">app.listen(PORT, () =&gt; &#123;</span><br><span class="line">  console.log(<span class="string">&quot;running at 3000 prot&quot;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">执行 `node app.js` 启动服务 此时我们可以在 `http://localhost:3000/` 访问到我们的内容。 接下来我们使用</span><br><span class="line">Docker 来实现。</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建-Dockerfile-文件"><a href="#创建-Dockerfile-文件" class="headerlink" title="创建 Dockerfile 文件"></a>创建 Dockerfile 文件</h2><p>在项目的根目录创建 Dockerfile 文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">FROM node:20-alpine3.17 <span class="comment"># 表示我们使用node 20的版本 注意1</span></span><br><span class="line">WORKDIR /myDocker <span class="comment"># 指定我们的工作目录</span></span><br><span class="line">COPY package.json . <span class="comment"># 将 package.json 复制到工作目录 .表示更目录 也就是我们指定的工作目录</span></span><br><span class="line">RUN npm install <span class="comment"># 执行 package.json</span></span><br><span class="line">COPY . . <span class="comment"># 将本地全部文件拷贝到Docker的工作目录 注意2</span></span><br><span class="line">EXPOSE 3000 <span class="comment"># 暴露3000端口 注意3</span></span><br><span class="line">CMD [<span class="string">&quot;node&quot;</span>,<span class="string">&quot;app.js&quot;</span>] <span class="comment"># 执行启动服务命令</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>注意 1： Alpine 操作系统是一个面向安全的轻型 Linux 发行版。它不同于通常 Linux 发行版，Alpine 采用了 musl libc 和 busybox 以减小系统的体积和运行时资源消耗，但功能上比 busybox 又完善的多，因此得到开源社区越来越多的青睐</li>
+<li>注意 2：我们这里需要忽略 node_modules 等一些文件的复制</li>
+<li>注意 3：EXPOSE 3000 只有文档说明作用 不起任何实际作用。实际开启 3000 端口的是 app.js 的内容；而 Dockerfile 里的 EXPOSE 只是让人们知道这个容器使用的是 3000 端口</li>
+</ul>
+<h2 id="创建-dockerignore-文件"><a href="#创建-dockerignore-文件" class="headerlink" title="创建 .dockerignore 文件"></a>创建 .dockerignore 文件</h2><p>前面提到的注意 2 中的事项，我们已经通过 npm install 安装了 node_modules ，所以不需要再复制一遍。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">node_modules</span><br><span class="line">Dockerfile</span><br><span class="line">.dockerignore</span><br><span class="line">.git</span><br><span class="line">.gitignore</span><br></pre></td></tr></table></figure>
+
+<h2 id="构建镜像"><a href="#构建镜像" class="headerlink" title="构建镜像"></a>构建镜像</h2><p>通过上面的操作我们就可以来构建镜像了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build .</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看镜像"><a href="#查看镜像" class="headerlink" title="查看镜像"></a>查看镜像</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker images</span><br></pre></td></tr></table></figure>
+
+<p>会看到如下的展示</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">REPOSITORYTAG   IMAGE ID   CREATED SIZE</span><br><span class="line">nodejs-image  latest227b17a0a994   About an hour ago   189MB</span><br></pre></td></tr></table></figure>
+
+<h2 id="给镜像取名字-tag"><a href="#给镜像取名字-tag" class="headerlink" title="给镜像取名字 tag"></a>给镜像取名字 tag</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker tag 227 baituzai/nodejs:v1.0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>227 是镜像 id 的前 3 位数字</li>
+<li>baituzai&#x2F;nodejs:v1.0 用户名&#x2F;镜像名:版本</li>
+</ul>
+<p><em><strong>注意：如果不加版本就是 lasted 建议务必加上</strong></em></p>
+<h2 id="登录并推送-Docker-Hub"><a href="#登录并推送-Docker-Hub" class="headerlink" title="登录并推送 Docker Hub"></a>登录并推送 Docker Hub</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker login</span><br><span class="line"><span class="comment"># 根据提示输入用户名和密码</span></span><br><span class="line"><span class="comment"># 成功登录后执行</span></span><br><span class="line">docker push baituzai/nodejs:v1.0</span><br></pre></td></tr></table></figure>
+
+<h2 id="在构建镜像的时候就定义名字-具名镜像-t"><a href="#在构建镜像的时候就定义名字-具名镜像-t" class="headerlink" title="在构建镜像的时候就定义名字 具名镜像 -t"></a>在构建镜像的时候就定义名字 具名镜像 -t</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t my_docker_image_name .</span><br></pre></td></tr></table></figure>
+
+<p>注意：. 表示相对地址</p>
+<h2 id="删除本地的镜像"><a href="#删除本地的镜像" class="headerlink" title="删除本地的镜像"></a>删除本地的镜像</h2><p>已经存在于 Docker Hub 所以把本地删除</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rmi -f baituzai/nodejs:v1.0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>rm remove 移除</li>
+<li>i 表示 image 镜像</li>
+<li>f force 强制删除（在使用中的镜像会被删除）</li>
+</ul>
+<h2 id="把镜像拉取到本地"><a href="#把镜像拉取到本地" class="headerlink" title="把镜像拉取到本地"></a>把镜像拉取到本地</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull baituzai/nodejs:v1.0 <span class="comment"># docker pull 镜像名称</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="运行镜像"><a href="#运行镜像" class="headerlink" title="运行镜像"></a>运行镜像</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run nodejs-image <span class="comment"># docker run 镜像名称</span></span><br></pre></td></tr></table></figure>
+
+<p>这种方式会占用我们的当前命令行窗口，使用 -d 选项使容器在后台运行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d nodejs-image <span class="comment"># docker run -d 镜像名称</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="查看在运行的容器"><a href="#查看在运行的容器" class="headerlink" title="查看在运行的容器"></a>查看在运行的容器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker ps</span><br><span class="line"><span class="comment"># or</span></span><br><span class="line">docker ps -a</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>ps 表示 process status</li>
+<li>-a 产看全部 包括未运行的容器</li>
+</ul>
+<h2 id="端口映射"><a href="#端口映射" class="headerlink" title="端口映射"></a>端口映射</h2><p>当我们运行起容器后，想要在本地访问发现是不能成功的，我们需要把 Docker 服务器的端口转发到本地端口才能进行访问。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 3000:3000 nodejs-image</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>3000:3000 主机端口：容器端口,访问主机端口 3000 的时候就会访问容器端口 3000。使用其他端口也可以，只要不冲突就好。</li>
+</ul>
+<h2 id="给这个容器自定义一个名字"><a href="#给这个容器自定义一个名字" class="headerlink" title="给这个容器自定义一个名字"></a>给这个容器自定义一个名字</h2><p>如果不定义那么系统就会给容器随机定义一个名字</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 3000:3000 --name nodejs-container nodejs-image</span><br></pre></td></tr></table></figure>
+
+<h2 id="停止运行容器-关机"><a href="#停止运行容器-关机" class="headerlink" title="停止运行容器(关机)"></a>停止运行容器(关机)</h2><p>把不使用的容器停止运行，也就关机，节省资源。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker stop nodejs-container <span class="comment"># 容器的id 或者是容器的名字都可以</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a>删除容器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">rm</span> container_id/contanier_name</span><br></pre></td></tr></table></figure>
+
+<h2 id="强制删除"><a href="#强制删除" class="headerlink" title="强制删除"></a>强制删除</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">rm</span> -f container_id/contanier_name</span><br></pre></td></tr></table></figure>
+
+<h2 id="修改本地文件-同步到-docker-文件"><a href="#修改本地文件-同步到-docker-文件" class="headerlink" title="修改本地文件 同步到 docker 文件"></a>修改本地文件 同步到 docker 文件</h2><p>修改本地文件后，docker 不会自动同步， 镜像如同一张照片，只修改文件并没有修改镜像，所以需要生成新的镜像</p>
+<h3 id="查看我们正在运行的容器"><a href="#查看我们正在运行的容器" class="headerlink" title="查看我们正在运行的容器"></a>查看我们正在运行的容器</h3><p>如何访问容器呢？</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it nodejs-container /bin/sh</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>exec ececute 执行</li>
+<li>i interactive 交互</li>
+<li>t pseudo-TTY 伪终端</li>
+<li>nodejs-container 容器名</li>
+<li>&#x2F;bin&#x2F;sh 表示我们执行一个新的 bash shell</li>
+</ul>
+<p>执行后会直接进入我的工作目录 myDocker 使用 <code>exit</code> 退出 shell</p>
+<h3 id="销毁容器"><a href="#销毁容器" class="headerlink" title="销毁容器"></a>销毁容器</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">rm</span> -f nodejs-container</span><br></pre></td></tr></table></figure>
+
+<h3 id="重新开启一个容器-v"><a href="#重新开启一个容器-v" class="headerlink" title="重新开启一个容器 -v"></a>重新开启一个容器 -v</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -v /Users/your_name/Desktop/learnDocker/:/myDocker -p 3000:3000 --name nodejs-container nodejs-image</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>绝对路径 本地文件夹路径：容器文件夹路径 （&#x2F;Users&#x2F;your_name&#x2F;Desktop&#x2F;learnDocker&#x2F;:&#x2F;myDocker）</li>
+<li>本地文件夹路径使用 <code>pwd</code> 查看或者使用环境变量</li>
+</ul>
+<h3 id="改动后能否成功？"><a href="#改动后能否成功？" class="headerlink" title="改动后能否成功？"></a>改动后能否成功？</h3><p>虽然文件内容同步更改了，但是还是不行 因为根据镜像启动容器的时候 使用 node app.js 是根据执行是的服务器文件来启动服务的。<br>如果文件有修改我们需要重新执行 node app.js 才能显示最新的内容。</p>
+<h3 id="使用-nodemon-来自动重启"><a href="#使用-nodemon-来自动重启" class="headerlink" title="使用 nodemon 来自动重启"></a>使用 nodemon 来自动重启</h3><ul>
+<li>再次删除容器</li>
+<li>安装 nodemon</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm i nodemon -D</span><br></pre></td></tr></table></figure>
+
+<p>修改 package.json 的脚本</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;dev&quot;</span><span class="punctuation">:</span> <span class="string">&quot;nodemon app.js&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="修改-Dockerfile"><a href="#修改-Dockerfile" class="headerlink" title="修改 Dockerfile"></a>修改 Dockerfile</h3><p>将 <code>CMD [&quot;node&quot;,&quot;app.js&quot;]</code> 改成 <code>CMD [ &quot;npm&quot;,&quot;run&quot;,&quot;dev&quot;]</code></p>
+<h3 id="删除之前的镜像-并重构镜像"><a href="#删除之前的镜像-并重构镜像" class="headerlink" title="删除之前的镜像 并重构镜像"></a>删除之前的镜像 并重构镜像</h3><h3 id="使用-v-选项再次启动容器"><a href="#使用-v-选项再次启动容器" class="headerlink" title="使用-v 选项再次启动容器"></a>使用-v 选项再次启动容器</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -v /Users/jiajunhua/Desktop/learnDocker/:/myDocker -p 3000:3000 --name nodejs-container nodejs-image</span><br></pre></td></tr></table></figure>
+
+<h3 id="特殊处理"><a href="#特殊处理" class="headerlink" title="特殊处理"></a>特殊处理</h3><h4 id="不要同步的文件-node-modules"><a href="#不要同步的文件-node-modules" class="headerlink" title="不要同步的文件 node_modules"></a>不要同步的文件 node_modules</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -v /Users/jiajunhua/Desktop/learnDocker/:/myDocker -v /myDocker/node_modules -p 3000:3000 --name nodejs-container nodejs-image</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>说明 ndoe_modules 文件夹不进行同步</li>
+</ul>
+<h4 id="容器内容修改也会导致本地内容修改-这不是我们想要的"><a href="#容器内容修改也会导致本地内容修改-这不是我们想要的" class="headerlink" title="容器内容修改也会导致本地内容修改 这不是我们想要的"></a>容器内容修改也会导致本地内容修改 这不是我们想要的</h4><p>我们要让本地变成只读模式 readonly 也就是 容器修改不会影响到本地的内容 单项流通 在-v 后面加上冒号 ro :ro</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -v /Users/jiajunhua/Desktop/learnDocker/:/myDocker:ro -v /myDocker/node_modules -p 3000:3000 --name nodejs-container nodejs-image</span><br></pre></td></tr></table></figure>
+
+<h4 id="使用-volume-时-当删除容器的时候-把对应的-volume-也删除"><a href="#使用-volume-时-当删除容器的时候-把对应的-volume-也删除" class="headerlink" title="使用 volume 时 当删除容器的时候 把对应的 volume 也删除"></a>使用 volume 时 当删除容器的时候 把对应的 volume 也删除</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">rm</span> -fv nodejs-container</span><br></pre></td></tr></table></figure>
+
+<h2 id="解决每次写命令都很长的问题-docker-compose"><a href="#解决每次写命令都很长的问题-docker-compose" class="headerlink" title="解决每次写命令都很长的问题 docker-compose"></a>解决每次写命令都很长的问题 docker-compose</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">touch</span> docker-compose.yml <span class="comment"># 创建 docker-compose.yml 文件</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">version: <span class="string">&#x27;3.8&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  nodejs-contaier:</span><br><span class="line">build: .</span><br><span class="line">ports:</span><br><span class="line">  - <span class="string">&quot;3000:3000&quot;</span></span><br><span class="line">volumes:</span><br><span class="line">  - ./:/myDocker:ro</span><br><span class="line">  - /myDocker/node_modules</span><br></pre></td></tr></table></figure>
+
+<p>注意这里的缩进是必要的</p>
+<h2 id="启动-docker-compose"><a href="#启动-docker-compose" class="headerlink" title="启动 docker-compose"></a>启动 docker-compose</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker-compose up</span><br><span class="line">docker-compose up -d  <span class="comment"># -d 后台运行模式</span></span><br><span class="line">docker-compose up -d --build <span class="comment"># --build  镜像修改后 docker-compose 自动重建</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="清除-docker-compose"><a href="#清除-docker-compose" class="headerlink" title="清除 docker-compose"></a>清除 docker-compose</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose down -y</span><br></pre></td></tr></table></figure>
+
+<h2 id="项目仓库地址"><a href="#项目仓库地址" class="headerlink" title="项目仓库地址"></a>项目仓库地址</h2><p><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/kxzb-fun/learn-docker">github项目地址</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://sharpmind.tech">Joy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://sharpmind.tech/docker-%E5%9F%BA%E7%A1%80%E5%85%A5%E9%97%A8%EF%BC%9A%E5%B7%A5%E4%BD%9C%E6%B5%81-%E5%AE%9E%E8%B7%B5/">https://sharpmind.tech/docker-%E5%9F%BA%E7%A1%80%E5%85%A5%E9%97%A8%EF%BC%9A%E5%B7%A5%E4%BD%9C%E6%B5%81-%E5%AE%9E%E8%B7%B5/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow noreferrer" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://sharpmind.tech" target="_blank">sharpmind.tech</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="https://cdn.sanity.io/images/1y08pmef/production/fd8c1cdc5fae27af9feebcd1400a105bbfa9f737-891x500.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/linux%E7%B3%BB%E7%BB%9Fcentos7-9%E5%AE%89%E8%A3%85docker-compose/" title="linux系统centos7.9安装docker-compose"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/fd8c1cdc5fae27af9feebcd1400a105bbfa9f737-891x500.webp" onerror="onerror=null;src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">linux系统centos7.9安装docker-compose</div></div><div class="info-2"><div class="info-item-1">在 Linux 系统中，docker-compose 需要单独安装。 如果想要安装最新的版本，可以查看 GitHub 上的 docker-compose仓库发布页面,并检查是否有新版本可下载。本文写作时，使用的是最新版本 2.20.2 1. 使用 curl 将 Compose 文件下载到&#x2F;usr&#x2F;local&#x2F;bin 目录中1sudo curl -L &quot;https://github.com/docker/compose/releases/download/2.20.2/docker-compose-$(uname -s)-$(uname -m)&quot; -o /usr/local/bin/docker-compose  2. 使用 chmod 修改 docker-compose 文件可执行权限1sudo chmod +x /usr/local/bin/docker-compose  3. 验证安装是否成功1docker-compose --version  4. bash: docker-compose: 未找到命令一般情况下是路径不在 ...</div></div></div></a><a class="pagination-related" href="/%E6%89%BE%E5%88%B0%E4%BD%A0%E5%86%85%E5%BF%83%E7%9A%84%E5%8E%9F%E7%9F%B3/" title="找到你内心的原石"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/934132e9f09dde966a8b3ed6cd5ef419b8ca54ec-1920x1038.jpg" onerror="onerror=null;src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">找到你内心的原石</div></div><div class="info-2"><div class="info-item-1">你必须找到自己内心的原石，经过耐心以及细心的打磨，让他变的闪闪发光，变成自己喜欢的样子。 昨天重温了一遍宫崎骏老师的《侧耳倾听》，里面有段内容还是很受启发的。  月岛雯在受到天泽圣司的影响下，想要开始发展自己的爱好写小说。但是自己刚开始尝试，心里很害怕，害怕什么呢？害怕自己做的不好，刚开始就想追求完美，这是新手都爱犯的问题。圣司的爷爷鼓励她，并给他介绍了一种天然云母石，又叫做绿柱石。是里面会含有绿宝石的原石，没有经过磨炼的自然原石。拿手电筒去照射会发出美丽的光彩，看起来很漂亮。爷爷说圣司和阿雯都是没经过磨炼的原石，他很喜欢，但是想要制作小提琴和写小说这样的事情就不一样了。你必须找到自己内心的原石，经过耐心以及细心的打磨，让他变的闪闪发光，变成自己喜欢的样子。 其实我们也是一样，是否找到了自己内心的原石呢？ 如果找到了，你有花时间耐心的去打磨自己内心的原石吗？ </div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Joy</div><div class="author-info-description">所知甚少，唯善学</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/kxzb-fun"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="mailto:sunday_ever.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div><p>Joy 的技术博客</p></div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E8%AF%B4%E6%98%8E"><span class="toc-number">2.</span> <span class="toc-text">环境说明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85-Docker"><span class="toc-number">3.</span> <span class="toc-text">安装 Docker</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B-Docker-%E7%89%88%E6%9C%AC"><span class="toc-number">3.1.</span> <span class="toc-text">查看 Docker 版本</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E6%9C%AC%E5%9C%B0%E9%A1%B9%E7%9B%AE"><span class="toc-number">4.</span> <span class="toc-text">创建本地项目</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE"><span class="toc-number">4.1.</span> <span class="toc-text">初始化项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%AF%E5%8A%A8%E7%AE%80%E5%8D%95%E7%9A%84%E6%9C%8D%E5%8A%A1"><span class="toc-number">4.2.</span> <span class="toc-text">启动简单的服务</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA-Dockerfile-%E6%96%87%E4%BB%B6"><span class="toc-number">5.</span> <span class="toc-text">创建 Dockerfile 文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA-dockerignore-%E6%96%87%E4%BB%B6"><span class="toc-number">6.</span> <span class="toc-text">创建 .dockerignore 文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F"><span class="toc-number">7.</span> <span class="toc-text">构建镜像</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E9%95%9C%E5%83%8F"><span class="toc-number">8.</span> <span class="toc-text">查看镜像</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%99%E9%95%9C%E5%83%8F%E5%8F%96%E5%90%8D%E5%AD%97-tag"><span class="toc-number">9.</span> <span class="toc-text">给镜像取名字 tag</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%99%BB%E5%BD%95%E5%B9%B6%E6%8E%A8%E9%80%81-Docker-Hub"><span class="toc-number">10.</span> <span class="toc-text">登录并推送 Docker Hub</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%A8%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F%E7%9A%84%E6%97%B6%E5%80%99%E5%B0%B1%E5%AE%9A%E4%B9%89%E5%90%8D%E5%AD%97-%E5%85%B7%E5%90%8D%E9%95%9C%E5%83%8F-t"><span class="toc-number">11.</span> <span class="toc-text">在构建镜像的时候就定义名字 具名镜像 -t</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E6%9C%AC%E5%9C%B0%E7%9A%84%E9%95%9C%E5%83%8F"><span class="toc-number">12.</span> <span class="toc-text">删除本地的镜像</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%8A%E9%95%9C%E5%83%8F%E6%8B%89%E5%8F%96%E5%88%B0%E6%9C%AC%E5%9C%B0"><span class="toc-number">13.</span> <span class="toc-text">把镜像拉取到本地</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E9%95%9C%E5%83%8F"><span class="toc-number">14.</span> <span class="toc-text">运行镜像</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E5%9C%A8%E8%BF%90%E8%A1%8C%E7%9A%84%E5%AE%B9%E5%99%A8"><span class="toc-number">15.</span> <span class="toc-text">查看在运行的容器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AB%AF%E5%8F%A3%E6%98%A0%E5%B0%84"><span class="toc-number">16.</span> <span class="toc-text">端口映射</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%99%E8%BF%99%E4%B8%AA%E5%AE%B9%E5%99%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%80%E4%B8%AA%E5%90%8D%E5%AD%97"><span class="toc-number">17.</span> <span class="toc-text">给这个容器自定义一个名字</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%81%9C%E6%AD%A2%E8%BF%90%E8%A1%8C%E5%AE%B9%E5%99%A8-%E5%85%B3%E6%9C%BA"><span class="toc-number">18.</span> <span class="toc-text">停止运行容器(关机)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E5%AE%B9%E5%99%A8"><span class="toc-number">19.</span> <span class="toc-text">删除容器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%BA%E5%88%B6%E5%88%A0%E9%99%A4"><span class="toc-number">20.</span> <span class="toc-text">强制删除</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%AE%E6%94%B9%E6%9C%AC%E5%9C%B0%E6%96%87%E4%BB%B6-%E5%90%8C%E6%AD%A5%E5%88%B0-docker-%E6%96%87%E4%BB%B6"><span class="toc-number">21.</span> <span class="toc-text">修改本地文件 同步到 docker 文件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E6%88%91%E4%BB%AC%E6%AD%A3%E5%9C%A8%E8%BF%90%E8%A1%8C%E7%9A%84%E5%AE%B9%E5%99%A8"><span class="toc-number">21.1.</span> <span class="toc-text">查看我们正在运行的容器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%94%80%E6%AF%81%E5%AE%B9%E5%99%A8"><span class="toc-number">21.2.</span> <span class="toc-text">销毁容器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E6%96%B0%E5%BC%80%E5%90%AF%E4%B8%80%E4%B8%AA%E5%AE%B9%E5%99%A8-v"><span class="toc-number">21.3.</span> <span class="toc-text">重新开启一个容器 -v</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%94%B9%E5%8A%A8%E5%90%8E%E8%83%BD%E5%90%A6%E6%88%90%E5%8A%9F%EF%BC%9F"><span class="toc-number">21.4.</span> <span class="toc-text">改动后能否成功？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-nodemon-%E6%9D%A5%E8%87%AA%E5%8A%A8%E9%87%8D%E5%90%AF"><span class="toc-number">21.5.</span> <span class="toc-text">使用 nodemon 来自动重启</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%AE%E6%94%B9-Dockerfile"><span class="toc-number">21.6.</span> <span class="toc-text">修改 Dockerfile</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E4%B9%8B%E5%89%8D%E7%9A%84%E9%95%9C%E5%83%8F-%E5%B9%B6%E9%87%8D%E6%9E%84%E9%95%9C%E5%83%8F"><span class="toc-number">21.7.</span> <span class="toc-text">删除之前的镜像 并重构镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-v-%E9%80%89%E9%A1%B9%E5%86%8D%E6%AC%A1%E5%90%AF%E5%8A%A8%E5%AE%B9%E5%99%A8"><span class="toc-number">21.8.</span> <span class="toc-text">使用-v 选项再次启动容器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86"><span class="toc-number">21.9.</span> <span class="toc-text">特殊处理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E8%A6%81%E5%90%8C%E6%AD%A5%E7%9A%84%E6%96%87%E4%BB%B6-node-modules"><span class="toc-number">21.9.1.</span> <span class="toc-text">不要同步的文件 node_modules</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%B9%E5%99%A8%E5%86%85%E5%AE%B9%E4%BF%AE%E6%94%B9%E4%B9%9F%E4%BC%9A%E5%AF%BC%E8%87%B4%E6%9C%AC%E5%9C%B0%E5%86%85%E5%AE%B9%E4%BF%AE%E6%94%B9-%E8%BF%99%E4%B8%8D%E6%98%AF%E6%88%91%E4%BB%AC%E6%83%B3%E8%A6%81%E7%9A%84"><span class="toc-number">21.9.2.</span> <span class="toc-text">容器内容修改也会导致本地内容修改 这不是我们想要的</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-volume-%E6%97%B6-%E5%BD%93%E5%88%A0%E9%99%A4%E5%AE%B9%E5%99%A8%E7%9A%84%E6%97%B6%E5%80%99-%E6%8A%8A%E5%AF%B9%E5%BA%94%E7%9A%84-volume-%E4%B9%9F%E5%88%A0%E9%99%A4"><span class="toc-number">21.9.3.</span> <span class="toc-text">使用 volume 时 当删除容器的时候 把对应的 volume 也删除</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%AF%8F%E6%AC%A1%E5%86%99%E5%91%BD%E4%BB%A4%E9%83%BD%E5%BE%88%E9%95%BF%E7%9A%84%E9%97%AE%E9%A2%98-docker-compose"><span class="toc-number">22.</span> <span class="toc-text">解决每次写命令都很长的问题 docker-compose</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%AF%E5%8A%A8-docker-compose"><span class="toc-number">23.</span> <span class="toc-text">启动 docker-compose</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B8%85%E9%99%A4-docker-compose"><span class="toc-number">24.</span> <span class="toc-text">清除 docker-compose</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E4%BB%93%E5%BA%93%E5%9C%B0%E5%9D%80"><span class="toc-number">25.</span> <span class="toc-text">项目仓库地址</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/33b1bf30a1bf9742714481c92e2c1a5fec816785-800x450.webp" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="hello rust 和cargo包管理器"/></a><div class="content"><a class="title" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器">hello rust 和cargo包管理器</a><time datetime="2025-12-20T03:36:50.000Z" title="发表于 2025-12-20 11:36:50">2025-12-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块初始化问题解决与主动更新策略"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略">Git子模块初始化问题解决与主动更新策略</a><time datetime="2025-12-19T12:43:00.000Z" title="发表于 2025-12-19 20:43:00">2025-12-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题">Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题</a><time datetime="2025-12-19T12:16:00.000Z" title="发表于 2025-12-19 20:16:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/" title="Rust 入门教程说明">Rust 入门教程说明</a><time datetime="2025-12-19T02:00:00.000Z" title="发表于 2025-12-19 10:00:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/Ubuntu24%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AE%89%E8%A3%85Docker%E6%97%B6%E6%8A%A5%E9%94%99%EF%BC%9Acurl-35-Recv-failure-Connection-reset-by-peer/" title="Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer">Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer</a><time datetime="2025-10-19T15:10:04.000Z" title="发表于 2025-10-19 23:10:04">2025-10-19</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2025 By Joy</span></div><div class="footer_custom_text"><a target="_blank" rel="noopener external nofollow noreferrer" href="https://beian.miit.gov.cn/#/Integrated/index" onmouseover="this.style.color='#ff7242'" onmouseout="this.style.color=''">冀ICP备2024089789号-1<a/></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>(() => {
+  const option = null
+  const config = {"site_uv":true,"site_pv":true,"page_pv":true,"token":null}
+
+  const runTrack = () => {
+    if (typeof umami !== 'undefined' && typeof umami.track === 'function') {
+      umami.track(props => ({ ...props, url: window.location.pathname, title: GLOBAL_CONFIG_SITE.title }))
+    } else {
+      console.warn('Umami Analytics: umami.track is not available')
+    }
+  }
+
+  const loadUmamiJS = () => {
+    btf.getScript('https://cloud.umami.is/script.js', {
+      'data-website-id': '6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87',
+      'data-auto-track': 'false',
+      ...option
+    }).then(() => {
+      runTrack()
+    }).catch(error => {
+      console.error('Umami Analytics: Error loading script', error)
+    })
+  }
+
+  const getData = async (isPost) => {
+    try {
+      const now = Date.now()
+      const keyUrl = isPost ? `&url=${window.location.pathname}&path=${window.location.pathname}` : ''
+      const headerList = { 'Accept': 'application/json' }
+
+      if (false) {
+        headerList['Authorization'] = `Bearer ${config.token}`
+      } else {
+        headerList['x-umami-api-key'] = config.token
+      }
+
+      const res = await fetch(`https://api.umami.is/v1/websites/6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87/stats?startAt=0000000000&endAt=${now}${keyUrl}`, {
+        method: "GET",
+        headers: headerList
+      })
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+
+      return await res.json()
+    } catch (error) {
+      console.error('Umami Analytics: Failed to fetch data', error)
+      throw error
+    }
+  }
+
+  const insertData = async () => {
+    try {
+      if (GLOBAL_CONFIG_SITE.pageType === 'post' && config.page_pv) {
+        const pagePV = document.getElementById('umamiPV')
+        if (pagePV) {
+          const data = await getData(true)
+          if (data && data.pageviews) {
+            pagePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else {
+            console.warn('Umami Analytics: Invalid page view data received')
+          }
+        }
+      }
+
+      if (config.site_uv || config.site_pv) {
+        const data = await getData(false)
+
+        if (config.site_uv) {
+          const siteUV = document.getElementById('umami-site-uv')
+          if (siteUV && data && data.visitors) {
+            siteUV.textContent = typeof data.visitors.value !== 'undefined' ? data.visitors.value : data.visitors
+          } else if (siteUV) {
+            console.warn('Umami Analytics: Invalid site UV data received')
+          }
+        }
+
+        if (config.site_pv) {
+          const sitePV = document.getElementById('umami-site-pv')
+          if (sitePV && data && data.pageviews) {
+            sitePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else if (sitePV) {
+            console.warn('Umami Analytics: Invalid site PV data received')
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Umami Analytics: Failed to insert data', error)
+    }
+  }
+
+  btf.addGlobalFn('pjaxComplete', runTrack, 'umami_analytics_run_track')
+  btf.addGlobalFn('pjaxComplete', insertData, 'umami_analytics_insert')
+
+
+  loadUmamiJS()
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', insertData)
+  } else {
+    setTimeout(insertData, 100)
+  }
+})()</script></div></body></html>

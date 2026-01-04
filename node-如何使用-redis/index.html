@@ -1,0 +1,450 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Node 如何使用 redis | sharpmind.tech</title><meta name="author" content="Joy"><meta name="copyright" content="Joy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="为什么 Redis 存储验证码更合适？ Redis 是一个内存数据库，非常适合用于存储短期有效的数据，例如验证码，因为它非常快速，并且可以设置过期时间（TTL，Time to Live）。当验证码过期时，它会自动删除，不需要手动清理。 将验证码存储在 Redis 中可以减轻数据库负担，避免冗余的数据存储。  npm install redis 基本的 Redis 使用示例示例：连接 Redis 并">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Node 如何使用 redis">
+<meta property="og:url" content="https://sharpmind.tech/node-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-redis/index.html">
+<meta property="og:site_name" content="sharpmind.tech">
+<meta property="og:description" content="为什么 Redis 存储验证码更合适？ Redis 是一个内存数据库，非常适合用于存储短期有效的数据，例如验证码，因为它非常快速，并且可以设置过期时间（TTL，Time to Live）。当验证码过期时，它会自动删除，不需要手动清理。 将验证码存储在 Redis 中可以减轻数据库负担，避免冗余的数据存储。  npm install redis 基本的 Redis 使用示例示例：连接 Redis 并">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg">
+<meta property="article:published_time" content="2024-10-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-12-19T07:23:55.414Z">
+<meta property="article:author" content="Joy">
+<meta property="article:tag" content="sharpmind.tech">
+<meta property="article:tag" content="sharpmind">
+<meta property="article:tag" content="Joy的技术博客">
+<meta property="article:tag" content="个人博客">
+<meta property="article:tag" content="程序员">
+<meta property="article:tag" content="js">
+<meta property="article:tag" content="javascript">
+<meta property="article:tag" content="next.js">
+<meta property="article:tag" content="react">
+<meta property="article:tag" content="vue">
+<meta property="article:tag" content="vite">
+<meta property="article:tag" content="技术博客">
+<meta property="article:tag" content="博客搭建">
+<meta property="article:tag" content="认知提升">
+<meta property="article:tag" content="终身成长">
+<meta property="article:tag" content="读书分享">
+<meta property="article:tag" content="前端开发">
+<meta property="article:tag" content="全栈开发">
+<meta property="article:tag" content="大学生作业">
+<meta property="article:tag" content="大学生毕业设计">
+<meta property="article:tag" content="Rust最新教程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Node 如何使用 redis",
+  "url": "https://sharpmind.tech/node-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-redis/",
+  "image": "https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg",
+  "datePublished": "2024-10-26T16:00:00.000Z",
+  "dateModified": "2025-12-19T07:23:55.414Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Joy",
+      "url": "https://sharpmind.tech"
+    }
+  ]
+}</script><link rel="shortcut icon" href="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png"><link rel="canonical" href="https://sharpmind.tech/node-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-redis/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//www.google-analytics.com" crossorigin=""/><link rel="preconnect" href="//hm.baidu.com"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-3570413384614130',
+  enable_page_level_ads: 'true'
+});</script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?a54c243eae7203c3dea8d0787608b48b";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-57L5KZJ4ZS"></script><script>window.dataLayer = window.dataLayer || []
+function gtag(){dataLayer.push(arguments)}
+gtag('js', new Date())
+gtag('config', 'G-57L5KZJ4ZS')
+btf.addGlobalFn('pjaxComplete', () => {
+  gtag('config', 'G-57L5KZJ4ZS', {'page_path': window.location.pathname})
+}, 'google_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: Joy","link":"链接: ","source":"来源: sharpmind.tech","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Node 如何使用 redis',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="sharpmind.tech" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="sharpmind.tech" type="application/rss+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/7a915a83f2a45a1f27105962abd3def95a0a144c-500x500.png" alt="Logo"><span class="site-name">sharpmind.tech</span></a><a class="nav-page-title" href="/"><span class="site-name">Node 如何使用 redis</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa-brands fa-rust"></i><span> Rust教程</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/"><span> 🚀 Rust入门教程说明</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-layer-group"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-box-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 网站</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Node 如何使用 redis</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-10-26T16:00:00.000Z" title="发表于 2024-10-27 00:00:00">2024-10-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-12-19T07:23:55.414Z" title="更新于 2025-12-19 15:23:55">2025-12-19</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span><span class="post-meta-separator">|</span><span id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="umamiPV" data-path="/node-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-redis/"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h2 id="为什么-Redis-存储验证码更合适？"><a href="#为什么-Redis-存储验证码更合适？" class="headerlink" title="为什么 Redis 存储验证码更合适？"></a>为什么 Redis 存储验证码更合适？</h2><ul>
+<li>Redis 是一个内存数据库，非常适合用于存储短期有效的数据，例如验证码，因为它非常快速，并且可以设置过期时间（TTL，Time to Live）。当验证码过期时，它会自动删除，不需要手动清理。</li>
+<li>将验证码存储在 Redis 中可以减轻数据库负担，避免冗余的数据存储。</li>
+</ul>
+<p><code>npm install redis</code></p>
+<h2 id="基本的-Redis-使用示例"><a href="#基本的-Redis-使用示例" class="headerlink" title="基本的 Redis 使用示例"></a>基本的 Redis 使用示例</h2><h3 id="示例：连接-Redis-并使用基本的-set-和-get-操作"><a href="#示例：连接-Redis-并使用基本的-set-和-get-操作" class="headerlink" title="示例：连接 Redis 并使用基本的 set 和 get 操作"></a>示例：连接 Redis 并使用基本的 <code>set</code> 和 <code>get</code> 操作</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">const</span> redis = <span class="built_in">require</span>(<span class="string">&#x27;redis&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建客户端并连接到 Redis 服务器</span></span><br><span class="line"><span class="keyword">const</span> client = redis.<span class="title function_">createClient</span>(&#123;</span><br><span class="line">  <span class="attr">host</span>: <span class="string">&#x27;localhost&#x27;</span>,  <span class="comment">// Redis 服务器地址，默认为 localhost</span></span><br><span class="line">  <span class="attr">port</span>: <span class="number">6379</span>,         <span class="comment">// Redis 端口，默认为 6379</span></span><br><span class="line">  <span class="comment">// 如果需要身份验证，使用密码</span></span><br><span class="line">  <span class="comment">// password: &#x27;your-redis-password&#x27;</span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 连接事件</span></span><br><span class="line">client.<span class="title function_">on</span>(<span class="string">&#x27;connect&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Connected to Redis&#x27;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">client.<span class="title function_">on</span>(<span class="string">&#x27;error&#x27;</span>, <span class="function">(<span class="params">err</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Redis error: &#x27;</span> - err);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 设置值到 Redis</span></span><br><span class="line">client.<span class="title function_">set</span>(<span class="string">&#x27;myKey&#x27;</span>, <span class="string">&#x27;Hello, Redis!&#x27;</span>, redis.<span class="property">print</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取 Redis 中的值</span></span><br><span class="line">client.<span class="title function_">get</span>(<span class="string">&#x27;myKey&#x27;</span>, <span class="function">(<span class="params">err, reply</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (err) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;Error getting value from Redis:&#x27;</span>, err);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Stored value:&#x27;</span>, reply);  <span class="comment">// 输出：Hello, Redis!</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 关闭 Redis 客户端</span></span><br><span class="line">client.<span class="title function_">quit</span>();</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-使用-Redis-存储验证码"><a href="#4-使用-Redis-存储验证码" class="headerlink" title="4. 使用 Redis 存储验证码"></a>4. 使用 Redis 存储验证码</h2><p>根据之前的注册逻辑，你可以使用 Redis 来存储验证码并设置过期时间。这里是一个使用 Redis 来存储验证码的例子。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">const</span> redis = <span class="built_in">require</span>(<span class="string">&#x27;redis&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> client = redis.<span class="title function_">createClient</span>(&#123;</span><br><span class="line">  <span class="attr">host</span>: <span class="string">&#x27;localhost&#x27;</span>,</span><br><span class="line">  <span class="attr">port</span>: <span class="number">6379</span>,</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 存储验证码到 Redis 并设置过期时间（例如 5 分钟）</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">storeVerificationCode</span>(<span class="params">email, code</span>) &#123;</span><br><span class="line">  client.<span class="title function_">setex</span>(email, <span class="number">300</span>, code);  <span class="comment">// 设置过期时间为 300 秒（5分钟）</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 检查验证码是否匹配</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">checkVerificationCode</span>(<span class="params">email, code, callback</span>) &#123;</span><br><span class="line">  client.<span class="title function_">get</span>(email, <span class="function">(<span class="params">err, storedCode</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (err) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="title function_">callback</span>(err);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (storedCode === code) &#123;</span><br><span class="line">      <span class="title function_">callback</span>(<span class="literal">null</span>, <span class="literal">true</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="title function_">callback</span>(<span class="literal">null</span>, <span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-完整的注册流程（存储验证码到-Redis）"><a href="#5-完整的注册流程（存储验证码到-Redis）" class="headerlink" title="5. 完整的注册流程（存储验证码到 Redis）"></a>5. 完整的注册流程（存储验证码到 Redis）</h2><p>你可以将 Redis 集成到之前的用户注册逻辑中，使用 Redis 存储和验证验证码。以下是修改后的代码示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> nodemailer = <span class="built_in">require</span>(<span class="string">&#x27;nodemailer&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> bodyParser = <span class="built_in">require</span>(<span class="string">&#x27;body-parser&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> redis = <span class="built_in">require</span>(<span class="string">&#x27;redis&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> dotenv = <span class="built_in">require</span>(<span class="string">&#x27;dotenv&#x27;</span>);</span><br><span class="line">dotenv.<span class="title function_">config</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> app = <span class="title function_">express</span>();</span><br><span class="line"><span class="keyword">const</span> port = <span class="number">3000</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Redis 客户端连接</span></span><br><span class="line"><span class="keyword">const</span> client = redis.<span class="title function_">createClient</span>(&#123;</span><br><span class="line">  <span class="attr">host</span>: <span class="string">&#x27;localhost&#x27;</span>,</span><br><span class="line">  <span class="attr">port</span>: <span class="number">6379</span>,</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">use</span>(bodyParser.<span class="title function_">json</span>());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 邮箱验证码发送路由</span></span><br><span class="line">app.<span class="title function_">post</span>(<span class="string">&#x27;/send-verification-code&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; email, nickname, password, confirmPassword &#125; = req.<span class="property">body</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!email || !nickname || !password || !confirmPassword) &#123;</span><br><span class="line">    <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Please fill all required fields.&#x27;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> emailRegex = <span class="regexp">/^[^\s@]-@[^\s@]-\.[^\s@]-$/</span>;</span><br><span class="line">  <span class="keyword">if</span> (!emailRegex.<span class="title function_">test</span>(email)) &#123;</span><br><span class="line">    <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Invalid email format.&#x27;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (password !== confirmPassword) &#123;</span><br><span class="line">    <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Passwords do not match.&#x27;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> code = <span class="title class_">Math</span>.<span class="title function_">floor</span>(<span class="number">1000</span> - <span class="title class_">Math</span>.<span class="title function_">random</span>() * <span class="number">9000</span>).<span class="title function_">toString</span>();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 使用 Nodemailer 发送验证码</span></span><br><span class="line">  <span class="keyword">const</span> transporter = nodemailer.<span class="title function_">createTransport</span>(&#123;</span><br><span class="line">    <span class="attr">service</span>: <span class="string">&#x27;SendGrid&#x27;</span>,</span><br><span class="line">    <span class="attr">auth</span>: &#123;</span><br><span class="line">      <span class="attr">user</span>: process.<span class="property">env</span>.<span class="property">SENDGRID_USERNAME</span>,</span><br><span class="line">      <span class="attr">pass</span>: process.<span class="property">env</span>.<span class="property">SENDGRID_PASSWORD</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> mailOptions = &#123;</span><br><span class="line">    <span class="attr">from</span>: process.<span class="property">env</span>.<span class="property">SENDGRID_FROM_EMAIL</span>,</span><br><span class="line">    <span class="attr">to</span>: email,</span><br><span class="line">    <span class="attr">subject</span>: <span class="string">&#x27;Email Verification Code&#x27;</span>,</span><br><span class="line">    <span class="attr">text</span>: <span class="string">`Your verification code is: <span class="subst">$&#123;code&#125;</span>`</span>,</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  transporter.<span class="title function_">sendMail</span>(mailOptions, <span class="function">(<span class="params">error, info</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (error) &#123;</span><br><span class="line">      <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">500</span>).<span class="title function_">send</span>(<span class="string">&#x27;Failed to send verification code.&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将验证码存储到 Redis 中，设置 5 分钟过期</span></span><br><span class="line">    client.<span class="title function_">setex</span>(email, <span class="number">300</span>, code);</span><br><span class="line"></span><br><span class="line">    res.<span class="title function_">send</span>(<span class="string">&#x27;Verification code sent.&#x27;</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 用户注册路由</span></span><br><span class="line">app.<span class="title function_">post</span>(<span class="string">&#x27;/register&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; email, verificationCode, nickname, password &#125; = req.<span class="property">body</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 从 Redis 获取验证码并进行验证</span></span><br><span class="line">  client.<span class="title function_">get</span>(email, <span class="function">(<span class="params">err, storedCode</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (err) &#123;</span><br><span class="line">      <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">500</span>).<span class="title function_">send</span>(<span class="string">&#x27;Redis error.&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!storedCode || storedCode !== verificationCode) &#123;</span><br><span class="line">      <span class="keyword">return</span> res.<span class="title function_">status</span>(<span class="number">400</span>).<span class="title function_">send</span>(<span class="string">&#x27;Invalid or expired verification code.&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 用户注册成功（这里通常会保存到数据库）</span></span><br><span class="line">    res.<span class="title function_">send</span>(<span class="string">&#x27;User registered successfully.&#x27;</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">listen</span>(port, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`Server running at http://localhost:<span class="subst">$&#123;port&#125;</span>`</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-Redis-高级用法"><a href="#6-Redis-高级用法" class="headerlink" title="6. Redis 高级用法"></a>6. Redis 高级用法</h2><ul>
+<li>设置过期时间：使用 <code>client.setex</code> 可以直接设置键值对的过期时间。</li>
+<li>删除数据：使用 <code>client.del(key)</code> 来删除某个键。</li>
+<li>查看剩余过期时间：使用 <code>client.ttl(key)</code> 来查看某个键的剩余过期时间。</li>
+</ul>
+<p>Redis 是一个非常快速的内存存储系统，广泛用于缓存、会话管理、消息队列等场景。如果在生产环境中使用 Redis，记得将其配置好并处理好错误和重试机制。</p>
+<h2 id="我使用的redis-客户端-mac-我该如何查看我的密码"><a href="#我使用的redis-客户端-mac-我该如何查看我的密码" class="headerlink" title="我使用的redis 客户端 mac 我该如何查看我的密码"></a>我使用的redis 客户端 mac 我该如何查看我的密码</h2><p>这个错误 <code>ReplyError: NOAUTH Authentication required</code> 表示你连接的 Redis 服务器启用了 密码验证，而你的应用程序没有提供正确的密码。</p>
+<h3 id="步骤-1-找到-redis-conf-配置文件的位置"><a href="#步骤-1-找到-redis-conf-配置文件的位置" class="headerlink" title="步骤 1: 找到 redis.conf 配置文件的位置"></a>步骤 1: 找到 <code>redis.conf</code> 配置文件的位置</h3><p>在默认情况下，Redis 的配置文件通常位于 <code>/usr/local/etc/redis/</code> 或 <code>/etc/redis/</code> 目录下。你可以通过以下命令来查找它：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -name redis.conf</span><br></pre></td></tr></table></figure>
+
+<p>如果你使用 Homebrew 安装了 Redis，默认的配置文件路径通常是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/etc/redis.conf</span><br></pre></td></tr></table></figure>
+
+<h3 id="步骤-2-查找-requirepass-配置项"><a href="#步骤-2-查找-requirepass-配置项" class="headerlink" title="步骤 2: 查找 requirepass 配置项"></a>步骤 2: 查找 <code>requirepass</code> 配置项</h3><p>打开 <code>redis.conf</code> 配置文件，并查找 <code>requirepass</code> 这一行，它是用来设置 Redis 密码的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /usr/local/etc/redis.conf | grep requirepass</span><br></pre></td></tr></table></figure>
+
+<p>你会看到类似下面的内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># requirepass foobared</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>如果这行前有 <code>#</code>，表示密码功能没有启用。</li>
+<li>如果没有 <code>#</code>，则会看到类似 <code>requirepass your-redis-password</code> 的内容，表示 Redis 密码已启用，<code>your-redis-password</code> 就是你的密码。</li>
+</ul>
+<h2 id="真实使用"><a href="#真实使用" class="headerlink" title="真实使用"></a>真实使用</h2><h3 id="redis-js"><a href="#redis-js" class="headerlink" title="redis.js"></a><code>redis.js</code></h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> redis = <span class="built_in">require</span>(<span class="string">&#x27;redis&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建 Redis 客户端并配置</span></span><br><span class="line"><span class="keyword">const</span> client = redis.<span class="title function_">createClient</span>(&#123;</span><br><span class="line">  <span class="attr">host</span>: <span class="string">&#x27;localhost&#x27;</span>, <span class="comment">// 或者使用环境变量配置</span></span><br><span class="line">  <span class="attr">port</span>: <span class="number">6379</span>,        <span class="comment">// Redis 端口，默认为 6379</span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 连接成功后输出</span></span><br><span class="line">client.<span class="title function_">on</span>(<span class="string">&#x27;connect&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Connected to Redis server&#x27;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 错误处理</span></span><br><span class="line">client.<span class="title function_">on</span>(<span class="string">&#x27;error&#x27;</span>, <span class="function">(<span class="params">err</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;Error connecting to Redis:&#x27;</span>, err);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 导出 Redis 客户端</span></span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = client;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="在-app-js-中使用-Redis"><a href="#在-app-js-中使用-Redis" class="headerlink" title="在 app.js 中使用 Redis"></a>在 <code>app.js</code> 中使用 Redis</h3><p>在 <code>app.js</code> 中，你只需要导入 <code>redis.js</code> 文件并确保连接已经建立。这样，所有后续需要使用 Redis 的地方都会通过这个配置。</p>
+<h3 id="app-js"><a href="#app-js" class="headerlink" title="app.js"></a><code>app.js</code></h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> redisClient = <span class="built_in">require</span>(<span class="string">&#x27;./redis&#x27;</span>);  <span class="comment">// 引入 Redis 配置文件</span></span><br><span class="line"><span class="keyword">const</span> app = <span class="title function_">express</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 你可以在这里使用 redisClient 进行 Redis 操作，例如</span></span><br><span class="line">redisClient.<span class="title function_">set</span>(<span class="string">&#x27;test&#x27;</span>, <span class="string">&#x27;Hello Redis&#x27;</span>, <span class="function">(<span class="params">err, reply</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (err) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;Error setting Redis value:&#x27;</span>, err);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Redis test set reply:&#x27;</span>, reply);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 路由等其他操作</span></span><br><span class="line">app.<span class="title function_">get</span>(<span class="string">&#x27;/&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  res.<span class="title function_">send</span>(<span class="string">&#x27;Hello, Redis connected!&#x27;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">PORT</span> = process.<span class="property">env</span>.<span class="property">PORT</span> || <span class="number">3000</span>;</span><br><span class="line">app.<span class="title function_">listen</span>(<span class="variable constant_">PORT</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`Server is running on port <span class="subst">$&#123;PORT&#125;</span>`</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="这样做的好处"><a href="#这样做的好处" class="headerlink" title="这样做的好处"></a>这样做的好处</h2><ul>
+<li>模块化配置：通过将 Redis 配置提取到单独的文件中，你可以在应用的不同部分复用 Redis 连接。</li>
+<li>简化代码：在 <code>app.js</code> 中，你只需要关注业务逻辑，Redis 的连接和操作交由 <code>redis.js</code> 管理。</li>
+<li>易于维护：当 Redis 的配置变化时，只需要修改 <code>redis.js</code> 文件，而不必到处修改应用中的连接逻辑。</li>
+</ul>
+<h2 id="额外建议"><a href="#额外建议" class="headerlink" title="额外建议"></a>额外建议</h2><ul>
+<li>如果你的应用使用了多个模块或需要在多个地方访问 Redis，那么你可以通过将 Redis 客户端导出并在其他模块中引入它，从而在不同地方使用同一个 Redis 连接。</li>
+</ul>
+<h2 id="1-使用第三方免费-Redis-服务"><a href="#1-使用第三方免费-Redis-服务" class="headerlink" title="1. 使用第三方免费 Redis 服务"></a>1. 使用第三方免费 Redis 服务</h2><h3 id="1-1-Upstash-免费版"><a href="#1-1-Upstash-免费版" class="headerlink" title="1.1 Upstash (免费版)"></a>1.1 Upstash (免费版)</h3><ul>
+<li>官网: <a target="_blank" rel="noopener external nofollow noreferrer" href="https://upstash.com/">https://upstash.com/</a></li>
+<li>免费计划:<ul>
+<li>每月最多 10,000 次请求。</li>
+<li>最大数据库大小为 256MB。</li>
+</ul>
+</li>
+<li>适合场景:<ul>
+<li>小型开发或测试环境。</li>
+<li>Redis 用作缓存、验证码存储等轻量级应用。</li>
+</ul>
+</li>
+<li>如何结合华为云：<ul>
+<li>在华为云的服务器上通过 <code>ioredis</code> 或 <code>node-redis</code> 等库连接到 Upstash 提供的 Redis 实例。</li>
+</ul>
+</li>
+</ul>
+<p>连接示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">javascript</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Copy code</span><br><span class="line">const Redis = require(&#x27;ioredis&#x27;);</span><br><span class="line"></span><br><span class="line">const redis = new Redis(&#123;</span><br><span class="line">  host: &#x27;upstash-redis-instance-url&#x27;,  // Upstash 提供的 Redis 实例 URL</span><br><span class="line">  port: 6379,                          // 默认 Redis 端口</span><br><span class="line">  password: &#x27;your-password&#x27;,           // Upstash 提供的密码</span><br><span class="line">  tls: &#123;&#125;                              // 支持 TLS 连接</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">redis.set(&#x27;key&#x27;, &#x27;value&#x27;);</span><br><span class="line">redis.get(&#x27;key&#x27;, (err, result) =&gt; &#123;</span><br><span class="line">  if (err) console.error(err);</span><br><span class="line">  console.log(&#x27;Redis result:&#x27;, result);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-Redis-Labs-Redis-Cloud"><a href="#1-2-Redis-Labs-Redis-Cloud" class="headerlink" title="1.2 Redis Labs (Redis Cloud)"></a>1.2 Redis Labs (Redis Cloud)</h3><ul>
+<li>官网: <a target="_blank" rel="noopener external nofollow noreferrer" href="https://redislabs.com/">https://redislabs.com/</a></li>
+<li>免费计划:<ul>
+<li>提供 30MB 的免费 Redis 实例。</li>
+</ul>
+</li>
+<li>适合场景:<ul>
+<li>适合开发或小型项目。</li>
+<li>对于验证码、会话管理等小型缓存非常合适。</li>
+</ul>
+</li>
+<li>如何结合华为云：<ul>
+<li>通过 Redis Labs 提供的 Redis 实例 URL 和认证信息，在华为云服务器上连接 Redis。</li>
+</ul>
+</li>
+</ul>
+<p>连接示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">javascript</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Copy code</span><br><span class="line">const Redis = require(&#x27;ioredis&#x27;);</span><br><span class="line"></span><br><span class="line">const redis = new Redis(&#123;</span><br><span class="line">  host: &#x27;your-redis-labs-url&#x27;,</span><br><span class="line">  port: 6379,</span><br><span class="line">  password: &#x27;your-redis-labs-password&#x27;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">redis.set(&#x27;key&#x27;, &#x27;value&#x27;);</span><br><span class="line">redis.get(&#x27;key&#x27;, (err, result) =&gt; &#123;</span><br><span class="line">  if (err) console.error(err);</span><br><span class="line">  console.log(&#x27;Redis result:&#x27;, result);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-3-Heroku-Redis-免费版"><a href="#1-3-Heroku-Redis-免费版" class="headerlink" title="1.3 Heroku Redis (免费版)"></a>1.3 Heroku Redis (免费版)</h4><ul>
+<li>官网: <a target="_blank" rel="noopener external nofollow noreferrer" href="https://www.heroku.com/redis">https://www.heroku.com/redis</a></li>
+<li>免费计划:<ul>
+<li>提供 25MB 存储，适用于小型应用。</li>
+</ul>
+</li>
+<li>适合场景:<ul>
+<li>适合在 Heroku 部署的应用，或者其他小型开发&#x2F;测试环境。</li>
+</ul>
+</li>
+<li>如何结合华为云：<ul>
+<li>如果你在华为云上有 Node.js 后端应用，可以直接连接 Heroku 提供的 Redis 服务。</li>
+</ul>
+</li>
+</ul>
+<p>连接示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">javascript</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Copy code</span><br><span class="line">const Redis = require(&#x27;ioredis&#x27;);</span><br><span class="line"></span><br><span class="line">const redis = new Redis(&#123;</span><br><span class="line">  host: &#x27;heroku-redis-url&#x27;,  // Heroku 提供的 Redis 实例 URL</span><br><span class="line">  port: 6379,</span><br><span class="line">  password: &#x27;heroku-redis-password&#x27;  // 密码</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">redis.set(&#x27;key&#x27;, &#x27;value&#x27;);</span><br><span class="line">redis.get(&#x27;key&#x27;, (err, result) =&gt; &#123;</span><br><span class="line">  if (err) console.error(err);</span><br><span class="line">  console.log(&#x27;Redis result:&#x27;, result);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-在华为云本地自建-Redis（免费）"><a href="#2-在华为云本地自建-Redis（免费）" class="headerlink" title="2. 在华为云本地自建 Redis（免费）"></a>2. 在华为云本地自建 Redis（免费）</h2><p>如果你不想依赖外部服务，可以选择 在华为云的服务器上自建 Redis。这将完全免费，但你需要自己管理 Redis 实例的部署、维护和安全配置。</p>
+<h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><ol>
+<li><p>选择云服务器：在华为云上创建一台云服务器，推荐选择轻量应用服务器（Lighthouse）或普通的 ECS 实例来托管 Redis。</p>
+</li>
+<li><p>安装 Redis： 在服务器上使用以下命令安装 Redis：</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt install redis-server</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置 Redis</p>
+<ul>
+<li>修改 <code>/etc/redis/redis.conf</code> 配置文件，确保 Redis 监听正确的 IP 地址。</li>
+<li>为 Redis 设置一个安全的密码。</li>
+</ul>
+</li>
+<li><p>启动 Redis 服务： 启动并使 Redis 开机自启：</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> redis-server</span><br><span class="line"><span class="built_in">sudo</span> systemctl start redis-server</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在 Node.js 应用中连接： 通过 <code>ioredis</code> 或 <code>node-redis</code> 在你的应用中连接本地 Redis：</p>
+</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title class_">Redis</span> = <span class="built_in">require</span>(<span class="string">&#x27;ioredis&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> redis = <span class="keyword">new</span> <span class="title class_">Redis</span>(&#123;</span><br><span class="line">  <span class="attr">host</span>: <span class="string">&#x27;localhost&#x27;</span>,  <span class="comment">// Redis 主机地址</span></span><br><span class="line">  <span class="attr">port</span>: <span class="number">6379</span>,         <span class="comment">// Redis 默认端口</span></span><br><span class="line">  <span class="attr">password</span>: <span class="string">&#x27;your-password&#x27;</span>  <span class="comment">// 设置的密码（如果配置了的话）</span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">redis.<span class="title function_">set</span>(<span class="string">&#x27;key&#x27;</span>, <span class="string">&#x27;value&#x27;</span>);</span><br><span class="line">redis.<span class="title function_">get</span>(<span class="string">&#x27;key&#x27;</span>, <span class="function">(<span class="params">err, result</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (err) <span class="variable language_">console</span>.<span class="title function_">error</span>(err);</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Redis result:&#x27;</span>, result);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>免费：无需付费。</li>
+<li>控制权：可以完全控制 Redis 配置和安全性。</li>
+<li>灵活性：适合处理大型数据和高流量需求。</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>需要手动管理 Redis 实例的维护、扩展和高可用性。</li>
+<li>需要额外的运维工作，如定期备份、监控等。</li>
+</ul>
+<hr>
+<h2 id="3-总结"><a href="#3-总结" class="headerlink" title="3. 总结"></a>3. 总结</h2><ul>
+<li>适合小型开发或测试环境：你可以选择 Upstash、Redis Labs 或 Heroku Redis，它们提供免费的 Redis 服务，适合小型项目或轻量级应用，并且容易集成到你的华为云服务器中。</li>
+<li>适合自建实例：如果你有一定的运维能力并且不介意管理 Redis，可以选择在华为云服务器上自行安装 Redis，完全免费，并能根据需求调整配置。</li>
+</ul>
+<p>对于生产环境，如果 Redis 服务的需求逐渐增大，建议考虑付费版本以获得更多功能、支持和性能保障。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://sharpmind.tech">Joy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://sharpmind.tech/node-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-redis/">https://sharpmind.tech/node-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-redis/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow noreferrer" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://sharpmind.tech" target="_blank">sharpmind.tech</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/API-%E8%B7%AF%E7%94%B1%E8%AE%BE%E8%AE%A1%E8%A7%84%E8%8C%83-RESTful-API/" title="API 路由设计规范 RESTful API"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">API 路由设计规范 RESTful API</div></div><div class="info-2"><div class="info-item-1">在 RESTful API 的设计中，将登录和注册 API 放在 users 路由下并不是不可以，但有更清晰、更符合语义化规范的方式来组织这些路由。以下是一些业界常见的设计方案和规范建议：  1. 根据资源和动作分开路由 用户的 CRUD 操作放在 /users 路由下。 登录和注册属于认证和授权的功能，不直接操作用户资源，建议单独归为一类。  路由建议： 用户相关（CRUD）：  123456GET    /api/v1/users          - 获取用户列表GET    /api/v1/users/:id      - 获取特定用户POST   /api/v1/users          - 创建用户PUT    /api/v1/users/:id      - 更新用户信息DELETE /api/v1/users/:id      - 删除用户   认证相关（Auth）：  1234POST   /api/v1/auth/register  - 用户注册POST   /api/v1/auth/login     - 用户登录POST   /api/v1/auth/...</div></div></div></a><a class="pagination-related" href="/%E5%A6%82%E4%BD%95%E6%8A%8A%E9%98%BF%E9%87%8C%E4%BA%91%E5%9F%9F%E5%90%8D%E9%85%8D%E7%BD%AE%E5%88%B0%20Vercel%20%E6%9C%8D%E5%8A%A1%E5%99%A8/" title="如何把阿里云域名绑定到 Vercel 服务器"><img class="cover" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/ccf8dbd08b1cfc7fdee8cbf6fccd6bb493cb85d1-1222x810.jpg" onerror="onerror=null;src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">如何把阿里云域名绑定到 Vercel 服务器</div></div><div class="info-2"><div class="info-item-1">2024年最新如何把阿里云域名绑定到 Vercel 服务器图文教程，如何给Vercel 服务器绑定自己的域名图文教程。</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/caace12f7cc070eb7a4a66d489148d256eb05e1b-749x749.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Joy</div><div class="author-info-description">所知甚少，唯善学</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">31</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">48</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/kxzb-fun"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="mailto:sunday_ever.com" rel="external nofollow noreferrer" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div><p>Joy 的技术博客</p></div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-Redis-%E5%AD%98%E5%82%A8%E9%AA%8C%E8%AF%81%E7%A0%81%E6%9B%B4%E5%90%88%E9%80%82%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">为什么 Redis 存储验证码更合适？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%9A%84-Redis-%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.</span> <span class="toc-text">基本的 Redis 使用示例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%EF%BC%9A%E8%BF%9E%E6%8E%A5-Redis-%E5%B9%B6%E4%BD%BF%E7%94%A8%E5%9F%BA%E6%9C%AC%E7%9A%84-set-%E5%92%8C-get-%E6%93%8D%E4%BD%9C"><span class="toc-number">2.1.</span> <span class="toc-text">示例：连接 Redis 并使用基本的 set 和 get 操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%BD%BF%E7%94%A8-Redis-%E5%AD%98%E5%82%A8%E9%AA%8C%E8%AF%81%E7%A0%81"><span class="toc-number">3.</span> <span class="toc-text">4. 使用 Redis 存储验证码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%AE%8C%E6%95%B4%E7%9A%84%E6%B3%A8%E5%86%8C%E6%B5%81%E7%A8%8B%EF%BC%88%E5%AD%98%E5%82%A8%E9%AA%8C%E8%AF%81%E7%A0%81%E5%88%B0-Redis%EF%BC%89"><span class="toc-number">4.</span> <span class="toc-text">5. 完整的注册流程（存储验证码到 Redis）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-Redis-%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95"><span class="toc-number">5.</span> <span class="toc-text">6. Redis 高级用法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E4%BD%BF%E7%94%A8%E7%9A%84redis-%E5%AE%A2%E6%88%B7%E7%AB%AF-mac-%E6%88%91%E8%AF%A5%E5%A6%82%E4%BD%95%E6%9F%A5%E7%9C%8B%E6%88%91%E7%9A%84%E5%AF%86%E7%A0%81"><span class="toc-number">6.</span> <span class="toc-text">我使用的redis 客户端 mac 我该如何查看我的密码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-1-%E6%89%BE%E5%88%B0-redis-conf-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-number">6.1.</span> <span class="toc-text">步骤 1: 找到 redis.conf 配置文件的位置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-2-%E6%9F%A5%E6%89%BE-requirepass-%E9%85%8D%E7%BD%AE%E9%A1%B9"><span class="toc-number">6.2.</span> <span class="toc-text">步骤 2: 查找 requirepass 配置项</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9C%9F%E5%AE%9E%E4%BD%BF%E7%94%A8"><span class="toc-number">7.</span> <span class="toc-text">真实使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#redis-js"><span class="toc-number">7.1.</span> <span class="toc-text">redis.js</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8-app-js-%E4%B8%AD%E4%BD%BF%E7%94%A8-Redis"><span class="toc-number">7.2.</span> <span class="toc-text">在 app.js 中使用 Redis</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#app-js"><span class="toc-number">7.3.</span> <span class="toc-text">app.js</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E6%A0%B7%E5%81%9A%E7%9A%84%E5%A5%BD%E5%A4%84"><span class="toc-number">8.</span> <span class="toc-text">这样做的好处</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%9D%E5%A4%96%E5%BB%BA%E8%AE%AE"><span class="toc-number">9.</span> <span class="toc-text">额外建议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E5%85%8D%E8%B4%B9-Redis-%E6%9C%8D%E5%8A%A1"><span class="toc-number">10.</span> <span class="toc-text">1. 使用第三方免费 Redis 服务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Upstash-%E5%85%8D%E8%B4%B9%E7%89%88"><span class="toc-number">10.1.</span> <span class="toc-text">1.1 Upstash (免费版)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-Redis-Labs-Redis-Cloud"><span class="toc-number">10.2.</span> <span class="toc-text">1.2 Redis Labs (Redis Cloud)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-Heroku-Redis-%E5%85%8D%E8%B4%B9%E7%89%88"><span class="toc-number">10.2.1.</span> <span class="toc-text">1.3 Heroku Redis (免费版)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%9C%A8%E5%8D%8E%E4%B8%BA%E4%BA%91%E6%9C%AC%E5%9C%B0%E8%87%AA%E5%BB%BA-Redis%EF%BC%88%E5%85%8D%E8%B4%B9%EF%BC%89"><span class="toc-number">11.</span> <span class="toc-text">2. 在华为云本地自建 Redis（免费）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4"><span class="toc-number">11.1.</span> <span class="toc-text">步骤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E7%82%B9"><span class="toc-number">11.2.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%BA%E7%82%B9"><span class="toc-number">11.3.</span> <span class="toc-text">缺点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%80%BB%E7%BB%93"><span class="toc-number">12.</span> <span class="toc-text">3. 总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.sanity.io/images/1y08pmef/production/33b1bf30a1bf9742714481c92e2c1a5fec816785-800x450.webp" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="hello rust 和cargo包管理器"/></a><div class="content"><a class="title" href="/rust/hello-rust-%E5%92%8Ccargo%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/" title="hello rust 和cargo包管理器">hello rust 和cargo包管理器</a><time datetime="2025-12-20T03:36:50.000Z" title="发表于 2025-12-20 11:36:50">2025-12-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块初始化问题解决与主动更新策略"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E4%B8%8E%E4%B8%BB%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5/" title="Git子模块初始化问题解决与主动更新策略">Git子模块初始化问题解决与主动更新策略</a><time datetime="2025-12-19T12:43:00.000Z" title="发表于 2025-12-19 20:43:00">2025-12-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1350&amp;q=80" onerror="this.onerror=null;this.src='https://cdn.sanity.io/images/1y08pmef/production/a82266752555ed49eb5deb9ad7ce3e957234294b-1920x1920.jpg'" alt="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题"/></a><div class="content"><a class="title" href="/Git%E5%AD%90%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" title="Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题">Git子模块配置问题解决：Hexo Butterfly主题未提交内容问题</a><time datetime="2025-12-19T12:16:00.000Z" title="发表于 2025-12-19 20:16:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/rust/Rust%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B%E8%AF%B4%E6%98%8E/" title="Rust 入门教程说明">Rust 入门教程说明</a><time datetime="2025-12-19T02:00:00.000Z" title="发表于 2025-12-19 10:00:00">2025-12-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/Ubuntu24%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AE%89%E8%A3%85Docker%E6%97%B6%E6%8A%A5%E9%94%99%EF%BC%9Acurl-35-Recv-failure-Connection-reset-by-peer/" title="Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer">Ubuntu24服务器安装Docker时报错：curl (35) Recv failure: Connection reset by peer</a><time datetime="2025-10-19T15:10:04.000Z" title="发表于 2025-10-19 23:10:04">2025-10-19</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2025 By Joy</span></div><div class="footer_custom_text"><a target="_blank" rel="noopener external nofollow noreferrer" href="https://beian.miit.gov.cn/#/Integrated/index" onmouseover="this.style.color='#ff7242'" onmouseout="this.style.color=''">冀ICP备2024089789号-1<a/></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>(() => {
+  const option = null
+  const config = {"site_uv":true,"site_pv":true,"page_pv":true,"token":null}
+
+  const runTrack = () => {
+    if (typeof umami !== 'undefined' && typeof umami.track === 'function') {
+      umami.track(props => ({ ...props, url: window.location.pathname, title: GLOBAL_CONFIG_SITE.title }))
+    } else {
+      console.warn('Umami Analytics: umami.track is not available')
+    }
+  }
+
+  const loadUmamiJS = () => {
+    btf.getScript('https://cloud.umami.is/script.js', {
+      'data-website-id': '6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87',
+      'data-auto-track': 'false',
+      ...option
+    }).then(() => {
+      runTrack()
+    }).catch(error => {
+      console.error('Umami Analytics: Error loading script', error)
+    })
+  }
+
+  const getData = async (isPost) => {
+    try {
+      const now = Date.now()
+      const keyUrl = isPost ? `&url=${window.location.pathname}&path=${window.location.pathname}` : ''
+      const headerList = { 'Accept': 'application/json' }
+
+      if (false) {
+        headerList['Authorization'] = `Bearer ${config.token}`
+      } else {
+        headerList['x-umami-api-key'] = config.token
+      }
+
+      const res = await fetch(`https://api.umami.is/v1/websites/6f134c17-11c6-4af7-bcd1-ad1c5bd4dd87/stats?startAt=0000000000&endAt=${now}${keyUrl}`, {
+        method: "GET",
+        headers: headerList
+      })
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+
+      return await res.json()
+    } catch (error) {
+      console.error('Umami Analytics: Failed to fetch data', error)
+      throw error
+    }
+  }
+
+  const insertData = async () => {
+    try {
+      if (GLOBAL_CONFIG_SITE.pageType === 'post' && config.page_pv) {
+        const pagePV = document.getElementById('umamiPV')
+        if (pagePV) {
+          const data = await getData(true)
+          if (data && data.pageviews) {
+            pagePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else {
+            console.warn('Umami Analytics: Invalid page view data received')
+          }
+        }
+      }
+
+      if (config.site_uv || config.site_pv) {
+        const data = await getData(false)
+
+        if (config.site_uv) {
+          const siteUV = document.getElementById('umami-site-uv')
+          if (siteUV && data && data.visitors) {
+            siteUV.textContent = typeof data.visitors.value !== 'undefined' ? data.visitors.value : data.visitors
+          } else if (siteUV) {
+            console.warn('Umami Analytics: Invalid site UV data received')
+          }
+        }
+
+        if (config.site_pv) {
+          const sitePV = document.getElementById('umami-site-pv')
+          if (sitePV && data && data.pageviews) {
+            sitePV.textContent = typeof data.pageviews.value !== 'undefined' ? data.pageviews.value : data.pageviews
+          } else if (sitePV) {
+            console.warn('Umami Analytics: Invalid site PV data received')
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Umami Analytics: Failed to insert data', error)
+    }
+  }
+
+  btf.addGlobalFn('pjaxComplete', runTrack, 'umami_analytics_run_track')
+  btf.addGlobalFn('pjaxComplete', insertData, 'umami_analytics_insert')
+
+
+  loadUmamiJS()
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', insertData)
+  } else {
+    setTimeout(insertData, 100)
+  }
+})()</script></div></body></html>
